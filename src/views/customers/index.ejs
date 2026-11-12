@@ -1,0 +1,93 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Master Data · Sales</div>
+    <h1 class="page-title">Customers</h1>
+    <p class="page-sub">Maintain customer records, payment terms, and credit limits used across order approval and receivables.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/customers/new">
+      <svg class="icon"><use href="#i-plus"></use></svg>
+      New customer
+    </a>
+  </div>
+</div>
+
+<form class="filter-bar" method="get" action="/customers">
+  <div class="field">
+    <label for="q">Search</label>
+    <input class="input input-sm" id="q" name="q" type="text" value="<%= filters.q %>" placeholder="Name, code, or city">
+  </div>
+  <div class="field">
+    <label for="status">Status</label>
+    <select class="select input-sm" id="status" name="status">
+      <option value="">All statuses</option>
+      <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active</option>
+      <option value="inactive" <%= filters.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+    </select>
+  </div>
+  <button class="btn btn-secondary btn-sm" type="submit">
+    <svg class="icon"><use href="#i-search"></use></svg>
+    Filter
+  </button>
+  <a class="btn btn-ghost btn-sm" href="/customers">Reset</a>
+  <div class="filter-spacer"></div>
+  <span class="text-xs text-muted"><%= customers.length %> customer<%= customers.length === 1 ? '' : 's' %></span>
+</form>
+
+<% if (!customers.length) { %>
+  <div class="table-wrap">
+    <div class="empty">
+      <div class="empty-icon"><svg class="icon"><use href="#i-customers"></use></svg></div>
+      <div class="empty-title">No customers found</div>
+      <div class="empty-text">Adjust the filters or create a new customer record.</div>
+      <a class="btn btn-primary" href="/customers/new">New customer</a>
+    </div>
+  </div>
+<% } else { %>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Code</th>
+            <th>City</th>
+            <th>Terms</th>
+            <th class="right">Credit limit</th>
+            <th>Status</th>
+            <th class="right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% customers.forEach(function (customer) { %>
+            <tr>
+              <td>
+                <div class="cell-primary"><%= customer.name %></div>
+                <div class="cell-sub"><%= customer.email || customer.phone || '—' %></div>
+              </td>
+              <td><span class="cell-mono"><%= customer.code %></span></td>
+              <td><%= customer.city || '—' %></td>
+              <td><%= customer.payment_terms_days %> days</td>
+              <td class="right money"><%= customer.credit_limit > 0 ? helpers.rupiah(customer.credit_limit) : 'No limit' %></td>
+              <td><span class="badge badge-<%= badge(customer.status) %>"><%= customer.status === 'active' ? 'Active' : 'Inactive' %></span></td>
+              <td>
+                <div class="table-actions">
+                  <a class="btn btn-ghost btn-sm" href="/customers/<%= customer.id %>">View</a>
+                  <a class="btn btn-ghost btn-sm" href="/customers/<%= customer.id %>/edit">Edit</a>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <span><%= customers.length %> customer<%= customers.length === 1 ? '' : 's' %></span>
+      <span>Credit limit 0 is treated as no limit</span>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../partials/foot') %>

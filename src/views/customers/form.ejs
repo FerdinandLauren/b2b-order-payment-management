@@ -1,0 +1,88 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Master Data · Customer</div>
+    <h1 class="page-title"><%= mode === 'create' ? 'New customer' : 'Edit customer' %></h1>
+    <p class="page-sub"><%= mode === 'create' ? 'Create a customer record with payment terms and credit limit.' : 'Update customer details. Changes affect future orders only.' %></p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="<%= customer ? '/customers/' + customer.id : '/customers' %>">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Back
+    </a>
+  </div>
+</div>
+
+<form method="post" action="<%= mode === 'create' ? '/customers' : '/customers/' + customer.id %>">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Company profile</div>
+        <div class="card-sub">The customer code is generated automatically on creation.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field field-full">
+          <label for="name">Customer name <span class="req">*</span></label>
+          <input class="input" id="name" name="name" type="text" required maxlength="120"
+                 value="<%= old.name || (customer ? customer.name : '') %>" placeholder="e.g. PT Bangun Jaya Konstruksi">
+        </div>
+
+        <div class="field field-full">
+          <label for="address">Address</label>
+          <input class="input" id="address" name="address" type="text" maxlength="200"
+                 value="<%= old.address || (customer ? customer.address : '') %>" placeholder="Street, district, city">
+        </div>
+
+        <div class="field">
+          <label for="city">City</label>
+          <input class="input" id="city" name="city" type="text" maxlength="80"
+                 value="<%= old.city || (customer ? customer.city : '') %>" placeholder="e.g. Jakarta Selatan">
+        </div>
+
+        <div class="field">
+          <label for="phone">Phone</label>
+          <input class="input" id="phone" name="phone" type="text" maxlength="30"
+                 value="<%= old.phone || (customer ? customer.phone : '') %>" placeholder="e.g. 021-5290 1188">
+        </div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input class="input" id="email" name="email" type="email" maxlength="120"
+                 value="<%= old.email || (customer ? customer.email : '') %>" placeholder="procurement@company.co.id">
+        </div>
+
+        <div class="field">
+          <label for="npwp">NPWP</label>
+          <input class="input" id="npwp" name="npwp" type="text" maxlength="40"
+                 value="<%= old.npwp || (customer ? customer.npwp : '') %>" placeholder="01.234.567.8-011.000">
+        </div>
+
+        <div class="field">
+          <label for="paymentTermsDays">Payment terms (days) <span class="req">*</span></label>
+          <input class="input" id="paymentTermsDays" name="paymentTermsDays" type="number" min="0" max="365" required
+                 value="<%= old.paymentTermsDays !== undefined ? old.paymentTermsDays : (customer ? customer.payment_terms_days : 30) %>">
+          <div class="help">Used to calculate invoice due dates.</div>
+        </div>
+
+        <div class="field">
+          <label for="creditLimit">Credit limit (IDR) <span class="req">*</span></label>
+          <input class="input" id="creditLimit" name="creditLimit" type="number" min="0" step="1000" required
+                 value="<%= old.creditLimit !== undefined ? old.creditLimit : (customer ? customer.credit_limit : 0) %>">
+          <div class="help">Enter 0 for no limit. Over-limit orders require supervisor override.</div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="<%= customer ? '/customers/' + customer.id : '/customers' %>">Cancel</a>
+        <button class="btn btn-primary" type="submit"><%= mode === 'create' ? 'Create customer' : 'Save changes' %></button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<%- include('../partials/foot') %>

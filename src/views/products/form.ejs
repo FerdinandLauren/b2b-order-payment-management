@@ -1,0 +1,70 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Master Data · Product</div>
+    <h1 class="page-title"><%= mode === 'create' ? 'New product' : 'Edit product' %></h1>
+    <p class="page-sub"><%= mode === 'create' ? 'Add a product to the catalogue. The SKU is generated automatically.' : 'Update product details. The SKU is a permanent identifier.' %></p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="<%= product ? '/products/' + product.id : '/products' %>">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Back
+    </a>
+  </div>
+</div>
+
+<form method="post" action="<%= mode === 'create' ? '/products' : '/products/' + product.id %>">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Product information</div>
+        <div class="card-sub">Base price is used as the default when adding order lines.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field field-full">
+          <label for="name">Product name <span class="req">*</span></label>
+          <input class="input" id="name" name="name" type="text" required maxlength="120"
+                 value="<%= old.name || (product ? product.name : '') %>" placeholder="e.g. Semen Portland 50 kg">
+        </div>
+
+        <div class="field">
+          <label for="categoryId">Category</label>
+          <select class="select" id="categoryId" name="categoryId">
+            <option value="">Uncategorised</option>
+            <% categories.forEach(function (category) { %>
+              <option value="<%= category.id %>" <%= String(old.categoryId || (product ? product.category_id : '')) === String(category.id) ? 'selected' : '' %>><%= category.name %></option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="unit">Unit of measure <span class="req">*</span></label>
+          <select class="select" id="unit" name="unit" required>
+            <% enums.UNITS.forEach(function (unit) { %>
+              <option value="<%= unit %>" <%= (old.unit || (product ? product.unit : 'pcs')) === unit ? 'selected' : '' %>><%= unit %></option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="unitPrice">Unit price (IDR) <span class="req">*</span></label>
+          <input class="input" id="unitPrice" name="unitPrice" type="number" min="0" step="100" required
+                 value="<%= old.unitPrice !== undefined ? old.unitPrice : (product ? product.unit_price : 0) %>">
+          <div class="help">Numeric only, e.g. 68000.</div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="<%= product ? '/products/' + product.id : '/products' %>">Cancel</a>
+        <button class="btn btn-primary" type="submit"><%= mode === 'create' ? 'Create product' : 'Save changes' %></button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<%- include('../partials/foot') %>

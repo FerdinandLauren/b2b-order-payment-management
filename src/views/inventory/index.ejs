@@ -1,0 +1,100 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Inventory · Stock Position</div>
+    <h1 class="page-title">Inventory</h1>
+    <p class="page-sub">On-hand and reserved stock by product and warehouse. Reservations are created automatically on order approval.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/inventory/movements">
+      <svg class="icon"><use href="#i-clock"></use></svg>
+      Stock movements
+    </a>
+    <a class="btn btn-primary" href="/inventory/adjustments/new">
+      <svg class="icon"><use href="#i-refresh"></use></svg>
+      Stock adjustment
+    </a>
+  </div>
+</div>
+
+<form class="filter-bar" method="get" action="/inventory">
+  <div class="field">
+    <label for="q">Search</label>
+    <input class="input input-sm" id="q" name="q" type="text" value="<%= filters.q %>" placeholder="Product name or SKU">
+  </div>
+  <div class="field">
+    <label for="warehouseId">Warehouse</label>
+    <select class="select input-sm" id="warehouseId" name="warehouseId">
+      <option value="">All warehouses</option>
+      <% warehouses.forEach(function (warehouse) { %>
+        <option value="<%= warehouse.id %>" <%= String(filters.warehouseId) === String(warehouse.id) ? 'selected' : '' %>><%= warehouse.name %></option>
+      <% }); %>
+    </select>
+  </div>
+  <button class="btn btn-secondary btn-sm" type="submit">
+    <svg class="icon"><use href="#i-search"></use></svg>
+    Filter
+  </button>
+  <a class="btn btn-ghost btn-sm" href="/inventory">Reset</a>
+  <div class="filter-spacer"></div>
+  <span class="text-xs text-muted"><%= balances.length %> row<%= balances.length === 1 ? '' : 's' %></span>
+</form>
+
+<% if (!balances.length) { %>
+  <div class="table-wrap">
+    <div class="empty">
+      <div class="empty-icon"><svg class="icon"><use href="#i-inventory"></use></svg></div>
+      <div class="empty-title">No inventory records</div>
+      <div class="empty-text">Record a stock adjustment or adjust the filters to see balances.</div>
+      <a class="btn btn-primary" href="/inventory/adjustments/new">Stock adjustment</a>
+    </div>
+  </div>
+<% } else { %>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>SKU</th>
+            <th>Warehouse</th>
+            <th class="right">On hand</th>
+            <th class="right">Reserved</th>
+            <th class="right">Available</th>
+            <th>Status</th>
+            <th class="right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% balances.forEach(function (balance) { %>
+            <tr>
+              <td>
+                <div class="cell-primary"><%= balance.product_name %></div>
+                <div class="cell-sub"><%= balance.category_name || 'Uncategorised' %> · <%= balance.unit %></div>
+              </td>
+              <td><span class="cell-mono"><%= balance.sku %></span></td>
+              <td class="text-sm"><%= balance.warehouse_name %></td>
+              <td class="right money"><%= helpers.number(balance.on_hand, 0) %></td>
+              <td class="right money"><%= helpers.number(balance.reserved, 0) %></td>
+              <td class="right money <%= balance.available > 0 ? 'text-success' : 'text-danger' %>"><%= helpers.number(balance.available, 0) %></td>
+              <td><span class="badge badge-<%= badge(balance.product_status) %>"><%= balance.product_status === 'active' ? 'Active' : 'Inactive' %></span></td>
+              <td>
+                <div class="table-actions">
+                  <a class="btn btn-ghost btn-sm" href="/products/<%= balance.product_id %>">Product</a>
+                  <a class="btn btn-ghost btn-sm" href="/inventory/movements?productId=<%= balance.product_id %>&warehouseId=<%= balance.warehouse_id %>">History</a>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <span><%= balances.length %> balance row<%= balances.length === 1 ? '' : 's' %></span>
+      <span>Available stock cannot be reserved twice</span>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../partials/foot') %>

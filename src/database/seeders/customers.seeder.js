@@ -115,6 +115,13 @@ module.exports = function seedCustomers(db) {
     );
   }
 
+  // Keep generated codes aligned with the seeded CUST-0001..0008 records.
+  db.prepare(
+    `INSERT INTO number_counters (entity, year, last_number)
+     VALUES ('customer', 'GLOBAL', ?)
+     ON CONFLICT(entity, year) DO UPDATE SET last_number = excluded.last_number`
+  ).run(CUSTOMERS.length);
+
   return CUSTOMERS.length;
 };
 

@@ -1,0 +1,62 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Master Data · Warehouse</div>
+    <h1 class="page-title"><%= mode === 'create' ? 'New warehouse' : 'Edit warehouse' %></h1>
+    <p class="page-sub"><%= mode === 'create' ? 'Warehouse codes are permanent and must be unique.' : 'Update the warehouse name and address.' %></p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/warehouses">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Back
+    </a>
+  </div>
+</div>
+
+<form method="post" action="<%= mode === 'create' ? '/warehouses' : '/warehouses/' + warehouse.id %>">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Warehouse details</div>
+        <div class="card-sub">The code is used on stock movement references.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field">
+          <label for="code">Code <span class="req">*</span></label>
+          <% if (mode === 'create') { %>
+            <input class="input" id="code" name="code" type="text" required maxlength="20"
+                   value="<%= old.code || '' %>" placeholder="e.g. WH-BDG" style="text-transform:uppercase">
+            <div class="help">3–20 characters · letters, numbers, hyphen.</div>
+          <% } else { %>
+            <input class="input" id="code" type="text" value="<%= warehouse.code %>" disabled>
+            <div class="help">Warehouse code cannot be changed.</div>
+          <% } %>
+        </div>
+
+        <div class="field">
+          <label for="name">Name <span class="req">*</span></label>
+          <input class="input" id="name" name="name" type="text" required maxlength="100"
+                 value="<%= old.name || (warehouse ? warehouse.name : '') %>" placeholder="e.g. Gudang Bandung">
+        </div>
+
+        <div class="field field-full">
+          <label for="address">Address</label>
+          <input class="input" id="address" name="address" type="text" maxlength="200"
+                 value="<%= old.address || (warehouse ? warehouse.address : '') %>" placeholder="Street, district, city">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="/warehouses">Cancel</a>
+        <button class="btn btn-primary" type="submit"><%= mode === 'create' ? 'Create warehouse' : 'Save changes' %></button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<%- include('../partials/foot') %>

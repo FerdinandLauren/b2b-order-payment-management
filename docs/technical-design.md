@@ -420,6 +420,8 @@ products ──< stock_movements
 | quantity | REAL | NOT NULL |
 | unit_price | REAL | NOT NULL |
 | line_total | REAL | NOT NULL |
+| cancelled_quantity | REAL | NOT NULL, default 0, CHECK ≥ 0 |
+| cancellation_reason | TEXT | required when `cancelled_quantity > 0` |
 
 **order_approvals**
 
@@ -427,7 +429,7 @@ products ──< stock_movements
 |---|---|---|
 | id | INTEGER | PK |
 | order_id | INTEGER | FK → sales_orders, NOT NULL |
-| action | TEXT | NOT NULL (`submitted`, `approved`, `rejected`, `cancelled`) |
+| action | TEXT | NOT NULL (`submitted`, `approved`, `rejected`, `cancelled`, `partially_cancelled`) |
 | reason | TEXT | required for `rejected` / `cancelled` / override |
 | is_override | INTEGER | NOT NULL, default 0 |
 | acted_by | INTEGER | FK → users |
@@ -620,7 +622,9 @@ available = on_hand - reserved
 - **Dispatch:** `on_hand -= qty`, `reserved -= qty`
 - **Cancellation:** `reserved -= remaining_reserved`
 
-**Per-order-line reserved quantity** is computed as `order_line.quantity - Σ delivery_lines.quantity` for that line. No separate per-line reservation column is required.
+**Per-order-line reserved quantity** is computed as `order_line.quantity - cancelled_quantity - Σ delivery_lines.quantity` for that line. No separate per-line reservation column is required. Partially cancelled lines keep their delivered quantities invoicable while the cancelled quantity is excluded from fulfillment and reservation.
+
+**Warehouse scope:** reservations and dispatches always apply to the default warehouse configured in `settings.default_warehouse_id` (seeded as `WH-JKT`). The MVP seeds a single active warehouse; multi-warehouse allocation is out of scope. An order line reserves its full remaining quantity against that warehouse at approval time.
 
 ### 6.4 Numbering
 
@@ -777,31 +781,40 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 ## 8. Route Design
 
 ```text
-POST   /auth/login
-POST   /auth/logout
+GET    /login
+POST   /login
+POST   /logout
+GET    /forbidden
 
 GET    /dashboard
 
 GET    /customers
+GET    /customers/new
 GET    /customers/:id
+GET    /customers/:id/edit
 POST   /customers
-PUT    /customers/:id
-PATCH  /customers/:id/status
+POST   /customers/:id
+POST   /customers/:id/status
 
 GET    /products
+GET    /products/new
 GET    /products/:id
+GET    /products/:id/edit
 POST   /products
-PUT    /products/:id
-PATCH  /products/:id/status
+POST   /products/:id
+POST   /products/:id/status
 
 GET    /inventory
 GET    /inventory/movements
+GET    /inventory/adjustments/new
 POST   /inventory/adjustments
 
 GET    /orders
+GET    /orders/new
 GET    /orders/:id
+GET    /orders/:id/edit
 POST   /orders
-PUT    /orders/:id
+POST   /orders/:id
 POST   /orders/:id/submit
 POST   /orders/:id/cancel
 
@@ -830,22 +843,26 @@ POST   /payments/:id/allocations
 
 GET    /categories
 POST   /categories
-PUT    /categories/:id
+POST   /categories/:id
 
 GET    /warehouses
+GET    /warehouses/new
+GET    /warehouses/:id/edit
 POST   /warehouses
-PUT    /warehouses/:id
-PATCH  /warehouses/:id/status
+POST   /warehouses/:id
+POST   /warehouses/:id/status
 
 GET    /users
+GET    /users/new
+GET    /users/:id/edit
 POST   /users
-PUT    /users/:id
-PATCH  /users/:id/status
+POST   /users/:id
+POST   /users/:id/status
 
 GET    /audit
 ```
 
-All routes are protected by `requireAuth`; role-restricted routes add `requireRole`.
+All routes are protected by `requireAuth`; role-restricted routes add `requireRole`. Because the UI is server-rendered with HTML forms, state-changing routes use `POST` endpoints (no `PUT`/`PATCH`/`DELETE` verbs); action suffixes such as `/status`, `/submit`, and `/approve` express intent.
 
 ---
 

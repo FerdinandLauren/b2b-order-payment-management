@@ -1,0 +1,89 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Inventory · Adjustment</div>
+    <h1 class="page-title">Stock adjustment</h1>
+    <p class="page-sub">Record a manual increase or decrease with a reason. Adjustments cannot reduce on-hand below reserved stock.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/inventory">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Back
+    </a>
+  </div>
+</div>
+
+<form method="post" action="/inventory/adjustments">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Adjustment details</div>
+        <div class="card-sub">Every adjustment creates a stock movement and an audit entry.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field">
+          <label for="productId">Product <span class="req">*</span></label>
+          <select class="select" id="productId" name="productId" required>
+            <option value="">Select a product</option>
+            <% products.forEach(function (product) { %>
+              <option value="<%= product.id %>" <%= String(old.productId || '') === String(product.id) ? 'selected' : '' %>>
+                <%= product.name %> · <%= product.sku %>
+              </option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="warehouseId">Warehouse <span class="req">*</span></label>
+          <select class="select" id="warehouseId" name="warehouseId" required>
+            <option value="">Select a warehouse</option>
+            <% warehouses.forEach(function (warehouse) { %>
+              <option value="<%= warehouse.id %>" <%= String(old.warehouseId || '') === String(warehouse.id) ? 'selected' : '' %>>
+                <%= warehouse.name %> · <%= warehouse.code %>
+              </option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="movementType">Adjustment type <span class="req">*</span></label>
+          <select class="select" id="movementType" name="movementType" required>
+            <option value="">Select a type</option>
+            <option value="adjustment_in" <%= old.movementType === 'adjustment_in' ? 'selected' : '' %>>Adjustment in (+)</option>
+            <option value="adjustment_out" <%= old.movementType === 'adjustment_out' ? 'selected' : '' %>>Adjustment out (−)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="quantity">Quantity <span class="req">*</span></label>
+          <input class="input" id="quantity" name="quantity" type="number" min="0.01" step="0.01" required
+                 value="<%= old.quantity || '' %>" placeholder="e.g. 25">
+          <div class="help">Positive value. Direction is set by the adjustment type.</div>
+        </div>
+
+        <div class="field field-full">
+          <label for="reason">Reason <span class="req">*</span></label>
+          <textarea class="textarea" id="reason" name="reason" required maxlength="200"
+                    placeholder="e.g. Stock count correction after physical audit"><%= old.reason || '' %></textarea>
+          <div class="help">Minimum 3 characters. The reason is visible in the stock movement history.</div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="/inventory">Cancel</a>
+        <button class="btn btn-primary" type="submit">Record adjustment</button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<p class="text-xs text-muted mt-2">
+  Reservations from approved orders are protected: on-hand stock cannot be reduced below the reserved quantity.
+</p>
+
+<%- include('../partials/foot') %>

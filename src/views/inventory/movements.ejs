@@ -1,0 +1,104 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Inventory · Audit Trail</div>
+    <h1 class="page-title">Stock movements</h1>
+    <p class="page-sub">Every receipt, dispatch, reservation, and adjustment is recorded with its reference and actor.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/inventory">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Inventory
+    </a>
+  </div>
+</div>
+
+<form class="filter-bar" method="get" action="/inventory/movements">
+  <div class="field">
+    <label for="productId">Product ID</label>
+    <input class="input input-sm" id="productId" name="productId" type="number" min="1" value="<%= filters.productId %>" placeholder="Any">
+  </div>
+  <div class="field">
+    <label for="warehouseId">Warehouse</label>
+    <select class="select input-sm" id="warehouseId" name="warehouseId">
+      <option value="">All warehouses</option>
+      <% warehouses.forEach(function (warehouse) { %>
+        <option value="<%= warehouse.id %>" <%= String(filters.warehouseId) === String(warehouse.id) ? 'selected' : '' %>><%= warehouse.name %></option>
+      <% }); %>
+    </select>
+  </div>
+  <div class="field">
+    <label for="movementType">Type</label>
+    <select class="select input-sm" id="movementType" name="movementType">
+      <option value="">All types</option>
+      <% Object.keys(enums.MOVEMENT_TYPE).forEach(function (type) { %>
+        <option value="<%= type %>" <%= filters.movementType === type ? 'selected' : '' %>><%= enums.MOVEMENT_TYPE[type] %></option>
+      <% }); %>
+    </select>
+  </div>
+  <button class="btn btn-secondary btn-sm" type="submit">
+    <svg class="icon"><use href="#i-search"></use></svg>
+    Filter
+  </button>
+  <a class="btn btn-ghost btn-sm" href="/inventory/movements">Reset</a>
+</form>
+
+<% if (!movements.length) { %>
+  <div class="table-wrap">
+    <div class="empty">
+      <div class="empty-icon"><svg class="icon"><use href="#i-clock"></use></svg></div>
+      <div class="empty-title">No movements found</div>
+      <div class="empty-text">Adjust the filters or record a stock adjustment.</div>
+    </div>
+  </div>
+<% } else { %>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Product</th>
+            <th>Warehouse</th>
+            <th>Reference</th>
+            <th>Reason</th>
+            <th class="right">Quantity</th>
+            <th>Recorded by</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% movements.forEach(function (movement) { %>
+            <tr>
+              <td class="text-sm text-muted nowrap"><%= helpers.datetime(movement.created_at) %></td>
+              <td><span class="badge badge-<%= movement.quantity >= 0 ? 'success' : 'warning' %>"><%= enums.MOVEMENT_TYPE[movement.movement_type] || movement.movement_type %></span></td>
+              <td>
+                <div class="cell-primary"><%= movement.product_name %></div>
+                <div class="cell-sub cell-mono"><%= movement.sku %></div>
+              </td>
+              <td class="text-sm"><%= movement.warehouse_name %></td>
+              <td class="text-sm text-muted"><%= movement.reference_type || '—' %><%= movement.reference_id ? ' #' + movement.reference_id : '' %></td>
+              <td class="text-sm text-muted"><%= movement.reason || '—' %></td>
+              <td class="right money <%= movement.quantity >= 0 ? 'text-success' : 'text-danger' %>"><%= helpers.number(movement.quantity, 0) %></td>
+              <td class="text-sm text-muted"><%= movement.user_name || 'System' %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <span><%= total %> movement<%= total === 1 ? '' : 's' %> · page <%= page %></span>
+      <div class="inline">
+        <% if (page > 1) { %>
+          <a class="btn btn-secondary btn-sm" href="/inventory/movements?page=<%= page - 1 %>&productId=<%= filters.productId %>&warehouseId=<%= filters.warehouseId %>&movementType=<%= filters.movementType %>">Previous</a>
+        <% } %>
+        <% if (page * limit < total) { %>
+          <a class="btn btn-secondary btn-sm" href="/inventory/movements?page=<%= page + 1 %>&productId=<%= filters.productId %>&warehouseId=<%= filters.warehouseId %>&movementType=<%= filters.movementType %>">Next</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../partials/foot') %>

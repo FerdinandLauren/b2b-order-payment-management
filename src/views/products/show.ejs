@@ -1,0 +1,166 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Master Data · Product</div>
+    <h1 class="page-title"><%= product.name %></h1>
+    <p class="page-sub"><span class="cell-mono"><%= product.sku %></span> · <%= product.category_name || 'Uncategorised' %></p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/products">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Back
+    </a>
+    <a class="btn btn-primary" href="/products/<%= product.id %>/edit">
+      <svg class="icon"><use href="#i-edit"></use></svg>
+      Edit
+    </a>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Unit price</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(product.unit_price) %></div>
+    <div class="stat-meta">Default price per <%= product.unit %></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">On hand</div>
+    <div class="stat-value"><%= helpers.number(product.on_hand, 0) %></div>
+    <div class="stat-meta">Across all warehouses</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Reserved</div>
+    <div class="stat-value"><%= helpers.number(product.reserved, 0) %></div>
+    <div class="stat-meta">Held for approved orders</div>
+  </div>
+  <div class="stat stat-success">
+    <div class="stat-label">Available</div>
+    <div class="stat-value"><%= helpers.number(product.on_hand - product.reserved, 0) %></div>
+    <div class="stat-meta">On hand minus reserved</div>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Stock by warehouse</div>
+          <div class="card-sub">Current balances and reservation levels.</div>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="/inventory?q=<%= encodeURIComponent(product.sku) %>">Open inventory</a>
+      </div>
+      <% if (!balances.length) { %>
+        <div class="empty">
+          <div class="empty-text">No inventory balance recorded yet.</div>
+        </div>
+      <% } else { %>
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Warehouse</th>
+                <th class="right">On hand</th>
+                <th class="right">Reserved</th>
+                <th class="right">Available</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% balances.forEach(function (balance) { %>
+                <tr>
+                  <td>
+                    <div class="cell-primary"><%= balance.warehouse_name %></div>
+                    <div class="cell-sub cell-mono"><%= balance.warehouse_code %></div>
+                  </td>
+                  <td class="right money"><%= helpers.number(balance.on_hand, 0) %></td>
+                  <td class="right money"><%= helpers.number(balance.reserved, 0) %></td>
+                  <td class="right money"><%= helpers.number(balance.available, 0) %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Recent stock movements</div>
+          <div class="card-sub">Latest receipts, dispatches, and adjustments for this product.</div>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="/inventory/movements?productId=<%= product.id %>">All movements</a>
+      </div>
+      <% if (!movements.length) { %>
+        <div class="empty">
+          <div class="empty-text">No stock movements recorded yet.</div>
+        </div>
+      <% } else { %>
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Warehouse</th>
+                <th>Reference</th>
+                <th class="right">Quantity</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% movements.forEach(function (movement) { %>
+                <tr>
+                  <td><span class="badge badge-<%= movement.quantity >= 0 ? 'success' : 'warning' %>"><%= enums.MOVEMENT_TYPE[movement.movement_type] || movement.movement_type %></span></td>
+                  <td class="text-sm"><%= movement.warehouse_name %></td>
+                  <td class="text-sm text-muted"><%= movement.reference_type || movement.reason || '—' %></td>
+                  <td class="right money <%= movement.quantity >= 0 ? 'text-success' : 'text-danger' %>"><%= helpers.number(movement.quantity, 0) %></td>
+                  <td class="text-sm text-muted"><%= helpers.datetime(movement.created_at) %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Product details</div>
+      </div>
+      <div class="card-body">
+        <div class="meta-list">
+          <div class="meta-row"><span class="meta-label">Status</span><span class="meta-value"><span class="badge badge-<%= badge(product.status) %>"><%= product.status === 'active' ? 'Active' : 'Inactive' %></span></span></div>
+          <div class="meta-row"><span class="meta-label">SKU</span><span class="meta-value cell-mono"><%= product.sku %></span></div>
+          <div class="meta-row"><span class="meta-label">Category</span><span class="meta-value"><%= product.category_name || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Unit</span><span class="meta-value"><%= product.unit %></span></div>
+          <div class="meta-row"><span class="meta-label">Unit price</span><span class="meta-value"><%= helpers.rupiah(product.unit_price) %></span></div>
+          <div class="divider"></div>
+          <div class="meta-row"><span class="meta-label">Created</span><span class="meta-value"><%= helpers.date(product.created_at) %></span></div>
+          <div class="meta-row"><span class="meta-label">Updated</span><span class="meta-value"><%= helpers.date(product.updated_at) %></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Status control</div>
+      </div>
+      <div class="card-body">
+        <p class="help mb-2">Inactive products cannot be added to new sales orders.</p>
+        <form method="post" action="/products/<%= product.id %>/status"
+              data-confirm="<%= product.status === 'active' ? 'Deactivate this product?' : 'Activate this product?' %>">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="status" value="<%= product.status === 'active' ? 'inactive' : 'active' %>">
+          <button class="btn <%= product.status === 'active' ? 'btn-danger' : 'btn-secondary' %> btn-block" type="submit">
+            <%= product.status === 'active' ? 'Deactivate product' : 'Activate product' %>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

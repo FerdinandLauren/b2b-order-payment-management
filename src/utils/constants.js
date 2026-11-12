@@ -49,6 +49,16 @@ const PAYMENT_METHOD = {
   other: 'Other',
 };
 
+const MOVEMENT_TYPE = {
+  receipt: 'Goods Receipt',
+  dispatch: 'Dispatch',
+  dispatch_reversal: 'Dispatch Reversal',
+  adjustment_in: 'Adjustment In',
+  adjustment_out: 'Adjustment Out',
+  reservation: 'Stock Reservation',
+  reservation_release: 'Reservation Release',
+};
+
 const UNITS = ['pcs', 'box', 'kg', 'ltr', 'unit', 'bag', 'roll', 'set'];
 
 const OPEN_ORDER_STATUSES = ['approved', 'partially_fulfilled'];
@@ -95,6 +105,7 @@ module.exports = {
   INVOICE_STATUS,
   PAYMENT_STATUS,
   PAYMENT_METHOD,
+  MOVEMENT_TYPE,
   UNITS,
   OPEN_ORDER_STATUSES,
   CANCELLABLE_ORDER_STATUSES,

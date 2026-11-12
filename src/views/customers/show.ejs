@@ -1,0 +1,167 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Master Data · Customer</div>
+    <h1 class="page-title"><%= customer.name %></h1>
+    <p class="page-sub"><span class="cell-mono"><%= customer.code %></span> · <%= customer.city || 'No city recorded' %></p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/customers">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Back
+    </a>
+    <a class="btn btn-primary" href="/customers/<%= customer.id %>/edit">
+      <svg class="icon"><use href="#i-edit"></use></svg>
+      Edit
+    </a>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Open orders</div>
+    <div class="stat-value"><%= summary.open_orders %></div>
+    <div class="stat-meta">Draft through partially fulfilled</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Approved order value</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(summary.open_order_value) %></div>
+    <div class="stat-meta">Committed but not yet delivered/invoiced</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Outstanding receivable</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(summary.outstanding) %></div>
+    <div class="stat-meta">Issued and partially paid invoices</div>
+  </div>
+  <div class="stat <%= summary.overdue_count > 0 ? 'stat-danger' : '' %>">
+    <div class="stat-label">Overdue invoices</div>
+    <div class="stat-value"><%= summary.overdue_count %></div>
+    <div class="stat-meta">Past due date with a balance</div>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Recent orders</div>
+          <div class="card-sub">Latest sales orders for this customer.</div>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="/orders?customerId=<%= customer.id %>">All orders</a>
+      </div>
+      <% if (!recentOrders.length) { %>
+        <div class="empty">
+          <div class="empty-text">No orders yet for this customer.</div>
+        </div>
+      <% } else { %>
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th class="right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% recentOrders.forEach(function (order) { %>
+                <tr>
+                  <td><a class="link" href="/orders/<%= order.id %>"><%= order.order_number %></a></td>
+                  <td class="text-sm text-muted"><%= helpers.date(order.order_date) %></td>
+                  <td><span class="badge badge-<%= badge(order.status) %>"><%= enums.ORDER_STATUS[order.status] || order.status %></span></td>
+                  <td class="right money"><%= helpers.rupiah(order.total) %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Recent invoices</div>
+          <div class="card-sub">Latest issued invoices and their remaining balance.</div>
+        </div>
+        <a class="btn btn-ghost btn-sm" href="/invoices?customerId=<%= customer.id %>">All invoices</a>
+      </div>
+      <% if (!recentInvoices.length) { %>
+        <div class="empty">
+          <div class="empty-text">No invoices yet for this customer.</div>
+        </div>
+      <% } else { %>
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Invoice</th>
+                <th>Due date</th>
+                <th>Status</th>
+                <th class="right">Total</th>
+                <th class="right">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% recentInvoices.forEach(function (invoice) { %>
+                <tr>
+                  <td><a class="link" href="/invoices/<%= invoice.id %>"><%= invoice.invoice_number %></a></td>
+                  <td class="text-sm text-muted"><%= helpers.date(invoice.due_date) %></td>
+                  <td><span class="badge badge-<%= badge(invoice.status) %>"><%= enums.INVOICE_STATUS[invoice.status] || invoice.status %></span></td>
+                  <td class="right money"><%= helpers.rupiah(invoice.total) %></td>
+                  <td class="right money"><%= helpers.rupiah(invoice.balance) %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Customer details</div>
+      </div>
+      <div class="card-body">
+        <div class="meta-list">
+          <div class="meta-row"><span class="meta-label">Status</span><span class="meta-value"><span class="badge badge-<%= badge(customer.status) %>"><%= customer.status === 'active' ? 'Active' : 'Inactive' %></span></span></div>
+          <div class="meta-row"><span class="meta-label">Code</span><span class="meta-value cell-mono"><%= customer.code %></span></div>
+          <div class="meta-row"><span class="meta-label">Payment terms</span><span class="meta-value"><%= customer.payment_terms_days %> days</span></div>
+          <div class="meta-row"><span class="meta-label">Credit limit</span><span class="meta-value"><%= customer.credit_limit > 0 ? helpers.rupiah(customer.credit_limit) : 'No limit' %></span></div>
+          <div class="divider"></div>
+          <div class="meta-row meta-row-block"><span class="meta-label">Address</span><span class="meta-value"><%= customer.address || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">City</span><span class="meta-value"><%= customer.city || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Phone</span><span class="meta-value"><%= customer.phone || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Email</span><span class="meta-value"><%= customer.email || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">NPWP</span><span class="meta-value"><%= customer.npwp || '—' %></span></div>
+          <div class="divider"></div>
+          <div class="meta-row"><span class="meta-label">Created</span><span class="meta-value"><%= helpers.date(customer.created_at) %></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Status control</div>
+      </div>
+      <div class="card-body">
+        <p class="help mb-2">Inactive customers cannot be selected on new sales orders.</p>
+        <form method="post" action="/customers/<%= customer.id %>/status"
+              data-confirm="<%= customer.status === 'active' ? 'Deactivate this customer?' : 'Activate this customer?' %>">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="status" value="<%= customer.status === 'active' ? 'inactive' : 'active' %>">
+          <button class="btn <%= customer.status === 'active' ? 'btn-danger' : 'btn-secondary' %> btn-block" type="submit">
+            <%= customer.status === 'active' ? 'Deactivate customer' : 'Activate customer' %>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

@@ -151,17 +151,17 @@ Authorized users can sign in and access the appropriate application areas.
 **Objective:** Implement foundational business data.
 
 Tasks:
-- [ ] Implement customer management.
-- [ ] Implement customer payment terms.
-- [ ] Implement customer credit limit fields.
-- [ ] Implement product management.
-- [ ] Implement product categories.
-- [ ] Implement warehouse management.
-- [ ] Implement inventory balances.
-- [ ] Implement available stock calculation.
-- [ ] Implement stock movement history.
-- [ ] Implement validation.
-- [ ] Create automated tests.
+- [x] Implement customer management.
+- [x] Implement customer payment terms.
+- [x] Implement customer credit limit fields.
+- [x] Implement product management.
+- [x] Implement product categories.
+- [x] Implement warehouse management.
+- [x] Implement inventory balances.
+- [x] Implement available stock calculation.
+- [x] Implement stock movement history.
+- [x] Implement validation.
+- [x] Create automated tests.
 
 Expected Deliverables:
 - Customer module.
@@ -407,7 +407,7 @@ A reviewer can understand the business problem, run the application, and follow 
 | M1 — Business Analysis and Requirements Engineering | Completed | PRD.md defines stakeholders, processes, rules, and requirements |
 | M2 — System Design and Architecture | Completed | DESIGN.md + `docs/technical-design.md` |
 | M3 — Application Foundation and Authentication | Completed | Login, RBAC, user management, shared layout; auth tests passing |
-| M4 — Master Data and Inventory Management | In Progress | |
+| M4 — Master Data and Inventory Management | Completed | Customers, products, categories, warehouses, inventory, movements, adjustments; 19 tests passing |
 | M5 — Sales Order Management | Not Started | |
 | M6 — Order Approval and Inventory Reservation | Not Started | |
 | M7 — Delivery and Fulfillment Management | Not Started | |

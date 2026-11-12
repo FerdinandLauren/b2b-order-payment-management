@@ -1,0 +1,85 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Master Data · Catalogue</div>
+    <h1 class="page-title">Product categories</h1>
+    <p class="page-sub">Group products for filtering and reporting. Categories are managed by the administrator.</p>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Categories</div>
+        <div class="card-sub">Rename a category inline. Names must be unique.</div>
+      </div>
+      <span class="badge badge-neutral"><%= categories.length %></span>
+    </div>
+    <% if (!categories.length) { %>
+      <div class="empty">
+        <div class="empty-icon"><svg class="icon"><use href="#i-categories"></use></svg></div>
+        <div class="empty-title">No categories yet</div>
+        <div class="empty-text">Create the first category using the form on the right.</div>
+      </div>
+    <% } else { %>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th class="right">Products</th>
+              <th class="right">Rename</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% categories.forEach(function (category) { %>
+              <tr>
+                <td class="cell-primary"><%= category.name %></td>
+                <td class="right">
+                  <a class="link" href="/products?categoryId=<%= category.id %>"><%= category.product_count %></a>
+                </td>
+                <td>
+                  <form class="inline" method="post" action="/categories/<%= category.id %>">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input class="input input-sm" name="name" type="text" value="<%= category.name %>" maxlength="60" required
+                           aria-label="Category name">
+                    <button class="btn btn-secondary btn-sm" type="submit">Save</button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Add category</div>
+        <div class="card-sub">2–60 characters.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <form method="post" action="/categories">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="field">
+          <label for="name">Category name <span class="req">*</span></label>
+          <input class="input" id="name" name="name" type="text" maxlength="60" required
+                 value="<%= old.name || '' %>" placeholder="e.g. Building Materials">
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary btn-block" type="submit">
+            <svg class="icon"><use href="#i-plus"></use></svg>
+            Add category
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

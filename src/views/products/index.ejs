@@ -1,0 +1,103 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Master Data · Inventory</div>
+    <h1 class="page-title">Products</h1>
+    <p class="page-sub">Maintain the product catalogue, unit pricing, and category assignment used on sales orders.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/products/new">
+      <svg class="icon"><use href="#i-plus"></use></svg>
+      New product
+    </a>
+  </div>
+</div>
+
+<form class="filter-bar" method="get" action="/products">
+  <div class="field">
+    <label for="q">Search</label>
+    <input class="input input-sm" id="q" name="q" type="text" value="<%= filters.q %>" placeholder="Product name or SKU">
+  </div>
+  <div class="field">
+    <label for="categoryId">Category</label>
+    <select class="select input-sm" id="categoryId" name="categoryId">
+      <option value="">All categories</option>
+      <% categories.forEach(function (category) { %>
+        <option value="<%= category.id %>" <%= String(filters.categoryId) === String(category.id) ? 'selected' : '' %>><%= category.name %></option>
+      <% }); %>
+    </select>
+  </div>
+  <div class="field">
+    <label for="status">Status</label>
+    <select class="select input-sm" id="status" name="status">
+      <option value="">All statuses</option>
+      <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active</option>
+      <option value="inactive" <%= filters.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+    </select>
+  </div>
+  <button class="btn btn-secondary btn-sm" type="submit">
+    <svg class="icon"><use href="#i-search"></use></svg>
+    Filter
+  </button>
+  <a class="btn btn-ghost btn-sm" href="/products">Reset</a>
+  <div class="filter-spacer"></div>
+  <span class="text-xs text-muted"><%= products.length %> product<%= products.length === 1 ? '' : 's' %></span>
+</form>
+
+<% if (!products.length) { %>
+  <div class="table-wrap">
+    <div class="empty">
+      <div class="empty-icon"><svg class="icon"><use href="#i-products"></use></svg></div>
+      <div class="empty-title">No products found</div>
+      <div class="empty-text">Adjust the filters or add a new product to the catalogue.</div>
+      <a class="btn btn-primary" href="/products/new">New product</a>
+    </div>
+  </div>
+<% } else { %>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>SKU</th>
+            <th>Category</th>
+            <th>Unit</th>
+            <th class="right">Unit price</th>
+            <th class="right">On hand</th>
+            <th class="right">Available</th>
+            <th>Status</th>
+            <th class="right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% products.forEach(function (product) { %>
+            <tr>
+              <td class="cell-primary"><%= product.name %></td>
+              <td><span class="cell-mono"><%= product.sku %></span></td>
+              <td><%= product.category_name || '—' %></td>
+              <td class="text-sm text-muted"><%= product.unit %></td>
+              <td class="right money"><%= helpers.rupiah(product.unit_price) %></td>
+              <td class="right money"><%= helpers.number(product.on_hand, 0) %></td>
+              <td class="right money"><%= helpers.number(product.on_hand - product.reserved, 0) %></td>
+              <td><span class="badge badge-<%= badge(product.status) %>"><%= product.status === 'active' ? 'Active' : 'Inactive' %></span></td>
+              <td>
+                <div class="table-actions">
+                  <a class="btn btn-ghost btn-sm" href="/products/<%= product.id %>">View</a>
+                  <a class="btn btn-ghost btn-sm" href="/products/<%= product.id %>/edit">Edit</a>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <span><%= products.length %> product<%= products.length === 1 ? '' : 's' %></span>
+      <span>Available = on hand − reserved</span>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../partials/foot') %>

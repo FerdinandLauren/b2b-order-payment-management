@@ -1,0 +1,78 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Master Data · Inventory</div>
+    <h1 class="page-title">Warehouses</h1>
+    <p class="page-sub">Stock is reserved in the default warehouse. Additional warehouses can be maintained for expansion.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="/warehouses/new">
+      <svg class="icon"><use href="#i-plus"></use></svg>
+      New warehouse
+    </a>
+  </div>
+</div>
+
+<% if (!warehouses.length) { %>
+  <div class="table-wrap">
+    <div class="empty">
+      <div class="empty-icon"><svg class="icon"><use href="#i-warehouse"></use></svg></div>
+      <div class="empty-title">No warehouses yet</div>
+      <div class="empty-text">Create a warehouse before recording inventory.</div>
+      <a class="btn btn-primary" href="/warehouses/new">New warehouse</a>
+    </div>
+  </div>
+<% } else { %>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Warehouse</th>
+            <th>Code</th>
+            <th>Address</th>
+            <th class="right">Products</th>
+            <th class="right">On hand</th>
+            <th>Status</th>
+            <th class="right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% warehouses.forEach(function (warehouse) { %>
+            <tr>
+              <td>
+                <div class="cell-primary"><%= warehouse.name %></div>
+                <div class="cell-sub">Stocking location</div>
+              </td>
+              <td><span class="cell-mono"><%= warehouse.code %></span></td>
+              <td class="text-sm text-muted"><%= warehouse.address || '—' %></td>
+              <td class="right money"><%= warehouse.product_count %></td>
+              <td class="right money"><%= helpers.number(warehouse.on_hand, 0) %></td>
+              <td><span class="badge badge-<%= badge(warehouse.status) %>"><%= warehouse.status === 'active' ? 'Active' : 'Inactive' %></span></td>
+              <td>
+                <div class="table-actions">
+                  <a class="btn btn-ghost btn-sm" href="/warehouses/<%= warehouse.id %>/edit">Edit</a>
+                  <form method="post" action="/warehouses/<%= warehouse.id %>/status"
+                        data-confirm="<%= warehouse.status === 'active' ? 'Deactivate this warehouse?' : 'Activate this warehouse?' %>">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="status" value="<%= warehouse.status === 'active' ? 'inactive' : 'active' %>">
+                    <button class="btn btn-ghost btn-sm <%= warehouse.status === 'active' ? 'text-danger' : 'text-success' %>" type="submit">
+                      <%= warehouse.status === 'active' ? 'Deactivate' : 'Activate' %>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <span><%= warehouses.length %> warehouse<%= warehouses.length === 1 ? '' : 's' %></span>
+      <span>The default warehouse cannot be deactivated</span>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../partials/foot') %>
