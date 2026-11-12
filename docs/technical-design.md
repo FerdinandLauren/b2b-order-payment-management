@@ -793,27 +793,27 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 |---|---|---|---|---|---|---|
 | Login / logout | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Dashboard | own view | sales view | fulfillment view | finance view | full | full |
-| Customer list / view | ✓ | ✓ | – | ✓ | ✓ | ✓ |
-| Customer create / edit | ✓ | ✓ | – | – | – | ✓ |
-| Product list / view | ✓ | ✓ | ✓ | – | ✓ | ✓ |
-| Product create / edit | – | – | – | – | – | ✓ |
-| Inventory view | ✓ | ✓ | ✓ | – | ✓ | ✓ |
-| Stock adjustment | – | – | ✓ | – | – | ✓ |
-| Order create / edit draft | ✓ | ✓ | – | – | – | – |
+| Customer list / view | ✓ | ✓ | - | ✓ | ✓ | ✓ |
+| Customer create / edit | ✓ | ✓ | - | - | - | ✓ |
+| Product list / view | ✓ | ✓ | ✓ | - | ✓ | ✓ |
+| Product create / edit | - | - | - | - | - | ✓ |
+| Inventory view | ✓ | ✓ | ✓ | - | ✓ | ✓ |
+| Stock adjustment | - | - | ✓ | - | - | ✓ |
+| Order create / edit draft | ✓ | ✓ | - | - | - | - |
 | Order list / view | ✓ | ✓ | fulfillment statuses only | ✓ | ✓ | ✓ |
-| Order submit | ✓ | ✓ | – | – | – | – |
-| Order cancel | own draft | ✓ | – | – | – | – |
-| Approval queue | – | ✓ | – | – | – | – |
-| Approve / reject | – | ✓ | – | – | – | – |
+| Order submit | ✓ | ✓ | - | - | - | - |
+| Order cancel | own draft | ✓ | - | - | - | - |
+| Approval queue | - | ✓ | - | - | - | - |
+| Approve / reject | - | ✓ | - | - | - | - |
 | Delivery view | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Delivery create / dispatch / confirm | – | – | ✓ | – | – | – |
-| Invoice view | ✓ | ✓ | – | ✓ | ✓ | ✓ |
-| Invoice generate / issue / void | – | – | – | ✓ | – | – |
-| Payment view | – | – | – | ✓ | ✓ | ✓ |
-| Payment record / allocate | – | – | – | ✓ | – | – |
-| User management | – | – | – | – | – | ✓ |
-| Audit view | – | – | – | – | ✓ | ✓ |
-| Management dashboard | – | – | – | – | ✓ | ✓ |
+| Delivery create / dispatch / confirm | - | - | ✓ | - | - | - |
+| Invoice view | ✓ | ✓ | - | ✓ | ✓ | ✓ |
+| Invoice generate / issue / void | - | - | - | ✓ | - | - |
+| Payment view | - | - | - | ✓ | ✓ | ✓ |
+| Payment record / allocate | - | - | - | ✓ | - | - |
+| User management | - | - | - | - | - | ✓ |
+| Audit view | - | - | - | - | ✓ | ✓ |
+| Management dashboard | - | - | - | - | ✓ | ✓ |
 
 **Warehouse visibility:** Warehouse Staff only see orders that have entered fulfillment (`approved`, `partially_fulfilled`, `partially_cancelled`, `fulfilled`). Draft, submitted, rejected and cancelled orders are hidden from both the order list and the detail page for that role.
 
@@ -1059,7 +1059,7 @@ Demo transactions (`npm run db:demo`):
 - Includes a submitted order for the approval queue, a credit-limit override with justification, a draft order, and a rejected order.
 - Because records are created through services, demo data exercises the same invariants as real usage (stock reservation, invoice uniqueness, allocation limits, audit trail).
 
-Fictional company: **PT Maju Bersama** — distributor of building materials and industrial supplies. All records are fictional and intended for demonstration.
+Fictional company: **PT Maju Bersama** - distributor of building materials and industrial supplies. All records are fictional and intended for demonstration.
 
 ---
 

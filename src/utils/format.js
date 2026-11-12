@@ -24,14 +24,14 @@ function number(value, decimals = 2) {
 }
 
 function date(value) {
-  if (!value) return '—';
+  if (!value) return '-';
   const parsed = new Date(`${String(value).slice(0, 10)}T00:00:00Z`);
   if (Number.isNaN(parsed.getTime())) return value;
   return dateFormatter.format(parsed);
 }
 
 function datetime(value) {
-  if (!value) return '—';
+  if (!value) return '-';
   const [datePart, timePart = ''] = String(value).split(' ');
   return `${date(datePart)}${timePart ? ` ${timePart.slice(0, 5)}` : ''}`;
 }

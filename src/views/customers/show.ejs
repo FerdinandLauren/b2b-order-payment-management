@@ -134,11 +134,11 @@
           <div class="meta-row"><span class="meta-label">Payment terms</span><span class="meta-value"><%= customer.payment_terms_days %> days</span></div>
           <div class="meta-row"><span class="meta-label">Credit limit</span><span class="meta-value"><%= customer.credit_limit > 0 ? helpers.rupiah(customer.credit_limit) : 'No limit' %></span></div>
           <div class="divider"></div>
-          <div class="meta-row meta-row-block"><span class="meta-label">Address</span><span class="meta-value"><%= customer.address || '—' %></span></div>
-          <div class="meta-row"><span class="meta-label">City</span><span class="meta-value"><%= customer.city || '—' %></span></div>
-          <div class="meta-row"><span class="meta-label">Phone</span><span class="meta-value"><%= customer.phone || '—' %></span></div>
-          <div class="meta-row"><span class="meta-label">Email</span><span class="meta-value"><%= customer.email || '—' %></span></div>
-          <div class="meta-row"><span class="meta-label">NPWP</span><span class="meta-value"><%= customer.npwp || '—' %></span></div>
+          <div class="meta-row meta-row-block"><span class="meta-label">Address</span><span class="meta-value"><%= customer.address || '-' %></span></div>
+          <div class="meta-row"><span class="meta-label">City</span><span class="meta-value"><%= customer.city || '-' %></span></div>
+          <div class="meta-row"><span class="meta-label">Phone</span><span class="meta-value"><%= customer.phone || '-' %></span></div>
+          <div class="meta-row"><span class="meta-label">Email</span><span class="meta-value"><%= customer.email || '-' %></span></div>
+          <div class="meta-row"><span class="meta-label">NPWP</span><span class="meta-value"><%= customer.npwp || '-' %></span></div>
           <div class="divider"></div>
           <div class="meta-row"><span class="meta-label">Created</span><span class="meta-value"><%= helpers.date(customer.created_at) %></span></div>
         </div>

@@ -145,7 +145,7 @@
           <div class="meta-row"><span class="meta-label">Order date</span><span class="meta-value"><%= helpers.date(order.order_date) %></span></div>
           <div class="meta-row"><span class="meta-label">Customer</span><span class="meta-value"><a class="link" href="/customers/<%= delivery.customer_id %>"><%= delivery.customer_name %></a></span></div>
           <div class="meta-row"><span class="meta-label">Payment terms</span><span class="meta-value"><%= delivery.payment_terms_days %> days</span></div>
-          <div class="meta-row"><span class="meta-label">Created by</span><span class="meta-value"><%= delivery.created_by_name || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Created by</span><span class="meta-value"><%= delivery.created_by_name || '-' %></span></div>
           <div class="meta-row"><span class="meta-label">Created</span><span class="meta-value"><%= helpers.datetime(delivery.created_at) %></span></div>
         </div>
       </div>
@@ -264,8 +264,8 @@
               <div class="field">
                 <label for="outcome">Resolution</label>
                 <select class="select" id="outcome" name="outcome" required>
-                  <option value="delivered">Delivered — the customer received the goods</option>
-                  <option value="cancelled">Cancelled — the goods were not received</option>
+                  <option value="delivered">Delivered - the customer received the goods</option>
+                  <option value="cancelled">Cancelled - the goods were not received</option>
                 </select>
               </div>
               <div class="field">
@@ -293,8 +293,8 @@
         <div class="card-body">
           <div class="meta-list">
             <div class="meta-row"><span class="meta-label">Status</span><span class="meta-value"><span class="badge badge-<%= badge(delivery.status) %>"><%= enums.DELIVERY_STATUS[delivery.status] %></span></span></div>
-            <div class="meta-row"><span class="meta-label">Dispatched</span><span class="meta-value"><%= delivery.dispatched_at ? helpers.datetime(delivery.dispatched_at) : '—' %></span></div>
-            <div class="meta-row"><span class="meta-label">Delivered</span><span class="meta-value"><%= delivery.delivered_at ? helpers.datetime(delivery.delivered_at) : '—' %></span></div>
+            <div class="meta-row"><span class="meta-label">Dispatched</span><span class="meta-value"><%= delivery.dispatched_at ? helpers.datetime(delivery.dispatched_at) : '-' %></span></div>
+            <div class="meta-row"><span class="meta-label">Delivered</span><span class="meta-value"><%= delivery.delivered_at ? helpers.datetime(delivery.delivered_at) : '-' %></span></div>
           </div>
         </div>
       </div>

@@ -65,10 +65,10 @@
             <tr>
               <td>
                 <div class="cell-primary"><%= customer.name %></div>
-                <div class="cell-sub"><%= customer.email || customer.phone || '—' %></div>
+                <div class="cell-sub"><%= customer.email || customer.phone || '-' %></div>
               </td>
               <td><span class="cell-mono"><%= customer.code %></span></td>
-              <td><%= customer.city || '—' %></td>
+              <td><%= customer.city || '-' %></td>
               <td><%= customer.payment_terms_days %> days</td>
               <td class="right money"><%= customer.credit_limit > 0 ? helpers.rupiah(customer.credit_limit) : 'No limit' %></td>
               <td><span class="badge badge-<%= badge(customer.status) %>"><%= customer.status === 'active' ? 'Active' : 'Inactive' %></span></td>

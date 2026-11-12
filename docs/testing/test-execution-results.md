@@ -5,7 +5,7 @@
 **Execution date:** 2026-11-12  
 **Environment:** Node.js v24.13.1, npm 11.8.0, Windows, in-memory SQLite  
 **Command:** `npm test` (`jest --runInBand`)  
-**Overall result:** **Passed — 8 suites, 73 tests, 0 failures**
+**Overall result:** **Passed - 8 suites, 73 tests, 0 failures**
 
 ---
 
@@ -59,32 +59,32 @@ Performed against the local development server (`http://localhost:3000`) with th
 
 | Check | Result |
 |---|---|
-| Sign in as Management and load `/dashboard` | Passed — HTTP 200; role guide, order KPIs, fulfillment, inventory, receivables, recent orders, activity feed rendered |
-| Dashboard KPI values | Passed — values read from live data (5 orders, 2 open orders, 1 pending approval, 20% fulfillment rate at the time of the check); no `NaN`, `undefined`, `Infinity`, or `[object Object]` in the page |
-| Date filter | Passed — `dateFrom`/`dateTo` accepted; range label updated; invalid date ignored |
-| Customer filter | Passed — `customerId=1` selected the customer and restricted the order KPI |
-| Warehouse dashboard | Passed — inventory visible; receivables and overdue sections absent; audit link hidden |
-| Finance dashboard | Passed — receivables visible; inventory section absent; audit link hidden |
-| Management dashboard | Passed — finance and inventory both visible; audit link present |
-| `/audit` as Management | Passed — HTTP 200; records listed newest first with pagination |
-| `/audit?entityType=payment` | Passed — only payment records listed |
-| `/audit?dateFrom=2000-01-01&dateTo=2000-01-02` | Passed — empty state with "No audit records match" and a clear-filters action |
-| `/audit` as Sales/Warehouse/Finance/Supervisor | Passed — HTTP 403 |
+| Sign in as Management and load `/dashboard` | Passed - HTTP 200; role guide, order KPIs, fulfillment, inventory, receivables, recent orders, activity feed rendered |
+| Dashboard KPI values | Passed - values read from live data (5 orders, 2 open orders, 1 pending approval, 20% fulfillment rate at the time of the check); no `NaN`, `undefined`, `Infinity`, or `[object Object]` in the page |
+| Date filter | Passed - `dateFrom`/`dateTo` accepted; range label updated; invalid date ignored |
+| Customer filter | Passed - `customerId=1` selected the customer and restricted the order KPI |
+| Warehouse dashboard | Passed - inventory visible; receivables and overdue sections absent; audit link hidden |
+| Finance dashboard | Passed - receivables visible; inventory section absent; audit link hidden |
+| Management dashboard | Passed - finance and inventory both visible; audit link present |
+| `/audit` as Management | Passed - HTTP 200; records listed newest first with pagination |
+| `/audit?entityType=payment` | Passed - only payment records listed |
+| `/audit?dateFrom=2000-01-01&dateTo=2000-01-02` | Passed - empty state with "No audit records match" and a clear-filters action |
+| `/audit` as Sales/Warehouse/Finance/Supervisor | Passed - HTTP 403 |
 
 ## 4. Requirement Coverage
 
 | Requirement group | Covered by |
 |---|---|
-| FR-001 – FR-005 (auth, RBAC, user management) | `auth.test.js`, role checks in all suites |
-| FR-006 – FR-020 (customer, product, inventory) | `master-data.test.js` |
-| FR-021 – FR-028 (sales orders) | `orders.test.js` |
-| FR-029 – FR-036, FR-069 – FR-071 (approval, credit, reservation) | `approvals.test.js`, dashboard audit feed |
-| FR-036 – FR-042 (delivery, stock issue) | `deliveries.test.js` |
-| FR-043 – FR-050, FR-072 – FR-074 (invoicing) | `invoices.test.js` |
-| FR-051 – FR-058 (payments, allocation) | `payments.test.js` |
-| FR-059 – FR-065 (dashboard and filters) | `dashboard.test.js` |
-| FR-066 – FR-068 (audit trail) | `dashboard.test.js` plus audit assertions in workflow suites |
-| NFR-001 – NFR-010 | Security middleware, transaction tests, validation tests, responsive manual smoke, fictional seed data |
+| FR-001 - FR-005 (auth, RBAC, user management) | `auth.test.js`, role checks in all suites |
+| FR-006 - FR-020 (customer, product, inventory) | `master-data.test.js` |
+| FR-021 - FR-028 (sales orders) | `orders.test.js` |
+| FR-029 - FR-036, FR-069 - FR-071 (approval, credit, reservation) | `approvals.test.js`, dashboard audit feed |
+| FR-036 - FR-042 (delivery, stock issue) | `deliveries.test.js` |
+| FR-043 - FR-050, FR-072 - FR-074 (invoicing) | `invoices.test.js` |
+| FR-051 - FR-058 (payments, allocation) | `payments.test.js` |
+| FR-059 - FR-065 (dashboard and filters) | `dashboard.test.js` |
+| FR-066 - FR-068 (audit trail) | `dashboard.test.js` plus audit assertions in workflow suites |
+| NFR-001 - NFR-010 | Security middleware, transaction tests, validation tests, responsive manual smoke, fictional seed data |
 
 ## 5. Notable Integrity Checks
 

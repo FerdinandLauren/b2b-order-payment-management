@@ -100,7 +100,7 @@
               </td>
               <td class="text-sm text-muted"><%= helpers.date(payment.payment_date) %></td>
               <td class="text-sm"><%= enums.PAYMENT_METHOD[payment.method] || payment.method %></td>
-              <td class="text-sm text-muted"><%= payment.reference || '—' %></td>
+              <td class="text-sm text-muted"><%= payment.reference || '-' %></td>
               <td class="right money"><%= helpers.rupiah(payment.amount) %></td>
               <td class="right money fw-600"><%= helpers.rupiah(payment.unallocated) %></td>
               <td><span class="badge badge-<%= badge(payment.status) %>"><%= enums.PAYMENT_STATUS[payment.status] %></span></td>

@@ -159,7 +159,7 @@ const deliveryA = createDelivery(orderA, '2026-09-18', {
 dispatch(deliveryA);
 confirm(deliveryA);
 const invoiceA = invoice(deliveryA, '2026-09-20');
-summary.push(`Invoice ${invoiceA.invoice_number} (${invoiceA.status}) — ${invoiceA.total}`);
+summary.push(`Invoice ${invoiceA.invoice_number} (${invoiceA.status}) - ${invoiceA.total}`);
 
 // 2. Fulfilled order, invoiced and fully paid.
 const orderB = createOrder({
@@ -179,7 +179,7 @@ const deliveryB = createDelivery(orderB, '2026-11-02', {
 dispatch(deliveryB);
 confirm(deliveryB);
 const invoiceB = invoice(deliveryB, '2026-11-02');
-summary.push(`Invoice ${invoiceB.invoice_number} (${invoiceB.status}) — ${invoiceB.total}`);
+summary.push(`Invoice ${invoiceB.invoice_number} (${invoiceB.status}) - ${invoiceB.total}`);
 
 // 3. Partial delivery, partially invoiced, still open.
 const orderC = createOrder({
@@ -199,7 +199,7 @@ const deliveryC = createDelivery(orderC, '2026-11-06', {
 dispatch(deliveryC);
 confirm(deliveryC);
 const invoiceC = invoice(deliveryC, '2026-11-06');
-summary.push(`Invoice ${invoiceC.invoice_number} (${invoiceC.status}) — ${invoiceC.total}`);
+summary.push(`Invoice ${invoiceC.invoice_number} (${invoiceC.status}) - ${invoiceC.total}`);
 
 // 4. Dispatched shipment with an unresolved delivery exception.
 const orderD = createOrder({

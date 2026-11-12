@@ -15,6 +15,6 @@ if (userCount === 0) {
 const app = createApp();
 
 app.listen(env.port, () => {
-  console.log(`${env.companyName} — ${env.appName}`);
+  console.log(`${env.companyName} - ${env.appName}`);
   console.log(`Server running at http://localhost:${env.port}`);
 });

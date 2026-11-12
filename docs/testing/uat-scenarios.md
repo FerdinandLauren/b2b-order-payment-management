@@ -14,7 +14,7 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 
 ---
 
-## UAT-01 — Authentication and session protection
+## UAT-01 - Authentication and session protection
 
 | Field | Detail |
 |---|---|
@@ -38,11 +38,11 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 4. The protected page is no longer accessible.
 5. A safe error is shown; no stack trace or credential detail is leaked.
 
-**Evidence:** `auth.test.js` — renders the login page; redirects unauthenticated users; rejects invalid credentials; signs in and redirects; signs out and protects the dashboard again.
+**Evidence:** `auth.test.js` - renders the login page; redirects unauthenticated users; rejects invalid credentials; signs in and redirects; signs out and protects the dashboard again.
 
 ---
 
-## UAT-02 — Role-based access control
+## UAT-02 - Role-based access control
 
 | Field | Detail |
 |---|---|
@@ -66,16 +66,16 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 4. The new account can sign in with the assigned role.
 5. Only Warehouse Staff and Admin can dispatch.
 
-**Evidence:** `auth.test.js` — blocks a sales user from user management; allows the admin to manage users. `master-data.test.js` — warehouse staff cannot access customer records; finance staff cannot view inventory balances. `deliveries.test.js` — non-warehouse roles cannot dispatch or confirm deliveries.
+**Evidence:** `auth.test.js` - blocks a sales user from user management; allows the admin to manage users. `master-data.test.js` - warehouse staff cannot access customer records; finance staff cannot view inventory balances. `deliveries.test.js` - non-warehouse roles cannot dispatch or confirm deliveries.
 
 ---
 
-## UAT-03 — Master data and inventory adjustment
+## UAT-03 - Master data and inventory adjustment
 
 | Field | Detail |
 |---|---|
 | **Role** | Sales Staff, Admin, Warehouse Staff |
-| **Requirements** | FR-006 – FR-020 |
+| **Requirements** | FR-006 - FR-020 |
 | **Precondition** | Signed in with the appropriate role. |
 
 **Steps**
@@ -96,16 +96,16 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 5. The adjustment is rejected; stock remains unchanged.
 6. The default warehouse cannot be deactivated.
 
-**Evidence:** `master-data.test.js` — all six checks above.
+**Evidence:** `master-data.test.js` - all six checks above.
 
 ---
 
-## UAT-04 — Multi-line sales order and totals
+## UAT-04 - Multi-line sales order and totals
 
 | Field | Detail |
 |---|---|
 | **Role** | Sales Staff |
-| **Requirements** | FR-021 – FR-024, BR-001 – BR-004 |
+| **Requirements** | FR-021 - FR-024, BR-001 - BR-004 |
 | **Precondition** | Active customer and active products with stock exist. |
 
 **Steps**
@@ -126,16 +126,16 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 5. The inactive customer is rejected.
 6. Validation blocks both cases with readable field errors.
 
-**Evidence:** `orders.test.js` — opens the order form; creates a multi-line draft; rejects empty lines and zero quantity; edits a draft and recalculates totals; inactive customers cannot be used.
+**Evidence:** `orders.test.js` - opens the order form; creates a multi-line draft; rejects empty lines and zero quantity; edits a draft and recalculates totals; inactive customers cannot be used.
 
 ---
 
-## UAT-05 — Approval, credit warning, and stock reservation
+## UAT-05 - Approval, credit warning, and stock reservation
 
 | Field | Detail |
 |---|---|
 | **Role** | Sales Staff → Sales Supervisor |
-| **Requirements** | FR-025, FR-029 – FR-035, FR-069 – FR-071, BR-005 – BR-008, BR-023 – BR-025, BR-027 |
+| **Requirements** | FR-025, FR-029 - FR-035, FR-069 - FR-071, BR-005 - BR-008, BR-023 - BR-025, BR-027 |
 | **Precondition** | A submitted order exists and stock is available. |
 
 **Steps**
@@ -160,11 +160,11 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 7. Self-approval is blocked (BR-027).
 8. Approval is rejected without changing stock or order status.
 
-**Evidence:** `approvals.test.js` — reviews credit and stock; reserves stock and writes an audit event; credit warnings require an override justification; a supervisor cannot approve their own order; approval is blocked when stock is insufficient; competing approvals cannot over-reserve.
+**Evidence:** `approvals.test.js` - reviews credit and stock; reserves stock and writes an audit event; credit warnings require an override justification; a supervisor cannot approve their own order; approval is blocked when stock is insufficient; competing approvals cannot over-reserve.
 
 ---
 
-## UAT-06 — Rejection with reason
+## UAT-06 - Rejection with reason
 
 | Field | Detail |
 |---|---|
@@ -182,16 +182,16 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 1. Rejection without a reason is blocked.
 2. Rejection with a reason moves the order to `rejected`, reserves no stock, records history, and writes an audit event.
 
-**Evidence:** `approvals.test.js` — rejection requires a reason and reserves no stock.
+**Evidence:** `approvals.test.js` - rejection requires a reason and reserves no stock.
 
 ---
 
-## UAT-07 — Partial delivery and fulfillment status
+## UAT-07 - Partial delivery and fulfillment status
 
 | Field | Detail |
 |---|---|
 | **Role** | Warehouse Staff |
-| **Requirements** | FR-036 – FR-042, BR-010, BR-011 |
+| **Requirements** | FR-036 - FR-042, BR-010, BR-011 |
 | **Precondition** | An approved order with reserved stock exists. |
 
 **Steps**
@@ -212,11 +212,11 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 5. Remaining quantities are calculated correctly and the order closes as `fulfilled`.
 6. Over-delivery is rejected.
 
-**Evidence:** `deliveries.test.js` — warehouse sees approved orders; only warehouse can create deliveries and over-delivery is rejected; dispatch issues stock and confirmation updates fulfillment; dispatch is blocked when reserved stock is gone.
+**Evidence:** `deliveries.test.js` - warehouse sees approved orders; only warehouse can create deliveries and over-delivery is rejected; dispatch issues stock and confirmation updates fulfillment; dispatch is blocked when reserved stock is gone.
 
 ---
 
-## UAT-08 — Delivery exception resolution
+## UAT-08 - Delivery exception resolution
 
 | Field | Detail |
 |---|---|
@@ -236,16 +236,16 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 2. Resolving as delivered completes the delivery and updates the order fulfillment.
 3. Resolving as cancelled reverses the stock movement and restores the reservation.
 
-**Evidence:** `deliveries.test.js` — exception resolved as delivered; exception resolved as cancelled reverses dispatch and restores stock.
+**Evidence:** `deliveries.test.js` - exception resolved as delivered; exception resolved as cancelled reverses dispatch and restores stock.
 
 ---
 
-## UAT-09 — Invoice generation, issuance, and due date
+## UAT-09 - Invoice generation, issuance, and due date
 
 | Field | Detail |
 |---|---|
 | **Role** | Finance Staff |
-| **Requirements** | FR-043 – FR-049, FR-072 – FR-074, BR-012 – BR-017, BR-026 |
+| **Requirements** | FR-043 - FR-049, FR-072 - FR-074, BR-012 - BR-017, BR-026 |
 | **Precondition** | A confirmed delivery exists. |
 
 **Steps**
@@ -266,11 +266,11 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 5. Re-issuing is blocked.
 6. The due date is calculated correctly (for example, 30-day terms on 2026-11-12 → 2026-12-12).
 
-**Evidence:** `invoices.test.js` — generates an invoice with correct totals and due date; a delivery cannot generate duplicate invoices; issuing twice is blocked.
+**Evidence:** `invoices.test.js` - generates an invoice with correct totals and due date; a delivery cannot generate duplicate invoices; issuing twice is blocked.
 
 ---
 
-## UAT-10 — Invoice void and replacement
+## UAT-10 - Invoice void and replacement
 
 | Field | Detail |
 |---|---|
@@ -289,16 +289,16 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 2. Voiding resets the delivery's invoiced quantity, so a replacement invoice can be generated.
 3. Invoices with payment allocations cannot be voided.
 
-**Evidence:** `invoices.test.js` — voiding requires a reason and releases the delivery; invoices with allocations cannot be voided.
+**Evidence:** `invoices.test.js` - voiding requires a reason and releases the delivery; invoices with allocations cannot be voided.
 
 ---
 
-## UAT-11 — Payment recording and multi-invoice allocation
+## UAT-11 - Payment recording and multi-invoice allocation
 
 | Field | Detail |
 |---|---|
 | **Role** | Finance Staff |
-| **Requirements** | FR-051 – FR-058, BR-015, BR-016, BR-018 – BR-020 |
+| **Requirements** | FR-051 - FR-058, BR-015, BR-016, BR-018 - BR-020 |
 | **Precondition** | One or more `issued` invoices exist for the payment's customer. |
 
 **Steps**
@@ -315,16 +315,16 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 3. The unallocated amount is retained and displayed; the invoice remains `partially_paid`.
 4. The final allocation makes the invoice `paid` and the payment `fully_allocated`.
 
-**Evidence:** `payments.test.js` — records a payment with an unallocated amount; allocates to multiple invoices; partial allocation leaves an outstanding balance.
+**Evidence:** `payments.test.js` - records a payment with an unallocated amount; allocates to multiple invoices; partial allocation leaves an outstanding balance.
 
 ---
 
-## UAT-12 — Allocation guards
+## UAT-12 - Allocation guards
 
 | Field | Detail |
 |---|---|
 | **Role** | Finance Staff |
-| **Requirements** | FR-056, BR-018 – BR-020 |
+| **Requirements** | FR-056, BR-018 - BR-020 |
 
 **Steps**
 
@@ -342,16 +342,16 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 4. Draft invoices are not offered and are rejected if submitted directly.
 5. A fully allocated payment has no unallocated amount to give; the submission is rejected.
 
-**Evidence:** `payments.test.js` — allocations cannot exceed payment or invoice balance; cannot allocate across customers or to draft invoices; over-allocation empties are blocked.
+**Evidence:** `payments.test.js` - allocations cannot exceed payment or invoice balance; cannot allocate across customers or to draft invoices; over-allocation empties are blocked.
 
 ---
 
-## UAT-13 — Order cancellation with partial delivery
+## UAT-13 - Order cancellation with partial delivery
 
 | Field | Detail |
 |---|---|
 | **Role** | Sales Staff / Sales Supervisor |
-| **Requirements** | FR-027, BR-009, BR-030 – BR-032 |
+| **Requirements** | FR-027, BR-009, BR-030 - BR-032 |
 | **Precondition** | One order without deliveries and one with a completed partial delivery. |
 
 **Steps**
@@ -370,16 +370,16 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 4. Delivered or invoiced quantities cannot be cancelled.
 5. Reservations for cancelled quantities are released; the reason, user, and timestamp are recorded in the audit trail.
 
-**Evidence:** `orders.test.js` — supervisor partially cancels; cancellation cannot exceed remaining quantity; full cancellation closes the order; draft cancellation; `deliveries.test.js` — an open draft delivery blocks cancellation.
+**Evidence:** `orders.test.js` - supervisor partially cancels; cancellation cannot exceed remaining quantity; full cancellation closes the order; draft cancellation; `deliveries.test.js` - an open draft delivery blocks cancellation.
 
 ---
 
-## UAT-14 — Dashboard KPIs, filters, and visibility
+## UAT-14 - Dashboard KPIs, filters, and visibility
 
 | Field | Detail |
 |---|---|
 | **Role** | Sales Staff, Sales Supervisor, Warehouse Staff, Finance Staff, Management, Admin |
-| **Requirements** | FR-059 – FR-065 |
+| **Requirements** | FR-059 - FR-065 |
 
 **Steps**
 
@@ -399,16 +399,16 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 5. Finance sees outstanding, overdue, current, draft invoice, and unallocated payment figures.
 6. Warehouse sees inventory but no receivables or overdue sections; audit links are hidden.
 
-**Evidence:** `dashboard.test.js` — live order KPIs; date and customer filters; role visibility; pending approvals; receivables and overdue invoices as of today.
+**Evidence:** `dashboard.test.js` - live order KPIs; date and customer filters; role visibility; pending approvals; receivables and overdue invoices as of today.
 
 ---
 
-## UAT-15 — Audit trail integrity and filtering
+## UAT-15 - Audit trail integrity and filtering
 
 | Field | Detail |
 |---|---|
 | **Role** | Management, Admin |
-| **Requirements** | FR-066 – FR-068, FR-071, BR-022, BR-025, BR-032, NFR-007 |
+| **Requirements** | FR-066 - FR-068, FR-071, BR-022, BR-025, BR-032, NFR-007 |
 | **Precondition** | Business actions have been performed in the system. |
 
 **Steps**
@@ -430,4 +430,4 @@ Each scenario is written the way a business user would execute it. `Evidence` po
 6. Every record contains the accountable user and timestamp; no edit or delete action is offered.
 7. Filtering `sales_order` + `order_approved` shows approved orders; entries approved with a credit override are summarized as "approved with a credit limit override", so overridden orders are identifiable for management review.
 
-**Evidence:** `dashboard.test.js` — audit trail is restricted to management and admin; filters by entity, action, and date. Audit events are also asserted across approvals, deliveries, invoices, and payments tests.
+**Evidence:** `dashboard.test.js` - audit trail is restricted to management and admin; filters by entity, action, and date. Audit events are also asserted across approvals, deliveries, invoices, and payments tests.

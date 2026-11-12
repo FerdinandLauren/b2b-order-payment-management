@@ -113,7 +113,7 @@
                 <tr>
                   <td><span class="badge badge-<%= movement.quantity >= 0 ? 'success' : 'warning' %>"><%= enums.MOVEMENT_TYPE[movement.movement_type] || movement.movement_type %></span></td>
                   <td class="text-sm"><%= movement.warehouse_name %></td>
-                  <td class="text-sm text-muted"><%= movement.reference_type || movement.reason || '—' %></td>
+                  <td class="text-sm text-muted"><%= movement.reference_type || movement.reason || '-' %></td>
                   <td class="right money <%= movement.quantity >= 0 ? 'text-success' : 'text-danger' %>"><%= helpers.number(movement.quantity, 0) %></td>
                   <td class="text-sm text-muted"><%= helpers.datetime(movement.created_at) %></td>
                 </tr>
@@ -134,7 +134,7 @@
         <div class="meta-list">
           <div class="meta-row"><span class="meta-label">Status</span><span class="meta-value"><span class="badge badge-<%= badge(product.status) %>"><%= product.status === 'active' ? 'Active' : 'Inactive' %></span></span></div>
           <div class="meta-row"><span class="meta-label">SKU</span><span class="meta-value cell-mono"><%= product.sku %></span></div>
-          <div class="meta-row"><span class="meta-label">Category</span><span class="meta-value"><%= product.category_name || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Category</span><span class="meta-value"><%= product.category_name || '-' %></span></div>
           <div class="meta-row"><span class="meta-label">Unit</span><span class="meta-value"><%= product.unit %></span></div>
           <div class="meta-row"><span class="meta-label">Unit price</span><span class="meta-value"><%= helpers.rupiah(product.unit_price) %></span></div>
           <div class="divider"></div>

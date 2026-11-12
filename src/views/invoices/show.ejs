@@ -170,7 +170,7 @@
                   <td><a class="link" href="/payments/<%= allocation.payment_id %>"><%= allocation.payment_number %></a></td>
                   <td class="text-sm text-muted"><%= helpers.date(allocation.payment_date) %></td>
                   <td class="text-sm"><%= enums.PAYMENT_METHOD[allocation.method] || allocation.method %></td>
-                  <td class="text-sm text-muted"><%= allocation.reference || '—' %></td>
+                  <td class="text-sm text-muted"><%= allocation.reference || '-' %></td>
                   <td class="right money"><%= helpers.rupiah(allocation.amount) %></td>
                 </tr>
               <% }); %>
@@ -200,7 +200,7 @@
           <div class="meta-row"><span class="meta-label">Invoice date</span><span class="meta-value"><%= helpers.date(invoice.invoice_date) %></span></div>
           <div class="meta-row"><span class="meta-label">Due date</span><span class="meta-value"><%= helpers.date(invoice.due_date) %></span></div>
           <div class="meta-row"><span class="meta-label">Payment terms</span><span class="meta-value"><%= invoice.payment_terms_days %> days</span></div>
-          <div class="meta-row"><span class="meta-label">Created by</span><span class="meta-value"><%= invoice.created_by_name || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Created by</span><span class="meta-value"><%= invoice.created_by_name || '-' %></span></div>
           <div class="meta-row"><span class="meta-label">Issued</span><span class="meta-value"><%= invoice.issued_at ? helpers.datetime(invoice.issued_at) : 'Not issued' %></span></div>
           <% if (invoice.voided_at) { %>
             <div class="meta-row"><span class="meta-label">Voided</span><span class="meta-value"><%= helpers.datetime(invoice.voided_at) %></span></div>

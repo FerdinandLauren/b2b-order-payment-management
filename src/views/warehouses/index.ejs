@@ -46,7 +46,7 @@
                 <div class="cell-sub">Stocking location</div>
               </td>
               <td><span class="cell-mono"><%= warehouse.code %></span></td>
-              <td class="text-sm text-muted"><%= warehouse.address || '—' %></td>
+              <td class="text-sm text-muted"><%= warehouse.address || '-' %></td>
               <td class="right money"><%= warehouse.product_count %></td>
               <td class="right money"><%= helpers.number(warehouse.on_hand, 0) %></td>
               <td><span class="badge badge-<%= badge(warehouse.status) %>"><%= warehouse.status === 'active' ? 'Active' : 'Inactive' %></span></td>

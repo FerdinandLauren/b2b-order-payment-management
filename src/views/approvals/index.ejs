@@ -85,7 +85,7 @@
                   <span class="badge badge-success">Available</span>
                 <% } %>
               </td>
-              <td class="text-sm text-muted"><%= item.order.created_by_name || '—' %></td>
+              <td class="text-sm text-muted"><%= item.order.created_by_name || '-' %></td>
               <td>
                 <div class="table-actions">
                   <a class="btn btn-primary btn-sm" href="/approvals/<%= item.order.id %>">Review</a>

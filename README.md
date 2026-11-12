@@ -1,6 +1,6 @@
 # B2B Order & Payment Management System
 
-A working **Order-to-Cash (O2C)** application for a fictional wholesale distributor, **PT Maju Bersama**. It covers the full commercial cycle — sales order, supervisor approval, stock reservation, delivery, invoicing, payment allocation, receivables monitoring, and audit trail — with enforced business rules and transaction integrity.
+A working **Order-to-Cash (O2C)** application for a fictional wholesale distributor, **PT Maju Bersama**. It covers the full commercial cycle - sales order, supervisor approval, stock reservation, delivery, invoicing, payment allocation, receivables monitoring, and audit trail - with enforced business rules and transaction integrity.
 
 Built as a portfolio case study that demonstrates both **business process analysis** and **practical full-stack implementation**. The company, customers, products, users, and transactions are entirely fictional.
 
@@ -31,7 +31,7 @@ Built as a portfolio case study that demonstrates both **business process analys
 
 A distributor does not just "sell products". It commits stock, extends credit, ships in parts, invoices per shipment, collects payments, and has to explain every number afterwards. Most portfolio CRUD apps stop at the order form. This project models the **entire commercial chain and the controls around it**:
 
-- Stock is not decremented when an order is created — it is **reserved at approval** and **issued at dispatch**.
+- Stock is not decremented when an order is created - it is **reserved at approval** and **issued at dispatch**.
 - Credit exposure is checked at the **line level** against issued invoices plus open orders, with a warning and a mandatory supervisor override.
 - Each delivery is invoiced **once**, with a controlled void-and-re-invoice path.
 - Payments can cover **multiple invoices**, partially or fully, without ever over-allocating.
@@ -164,7 +164,7 @@ All accounts are seeded for demonstration only.
 | Cancellation | Delivered or invoiced quantities cannot be cancelled. |
 | Audit | Every consequential action is recorded; audit records cannot be edited or deleted. |
 
-The full rule set is in [`PRD.md`](PRD.md) (BR-001 – BR-032) and mapped to tests in [`docs/requirements/traceability-matrix.md`](docs/requirements/traceability-matrix.md).
+The full rule set is in [`PRD.md`](PRD.md) (BR-001 - BR-032) and mapped to tests in [`docs/requirements/traceability-matrix.md`](docs/requirements/traceability-matrix.md).
 
 ## Technology stack
 
@@ -337,12 +337,12 @@ Key records to explore:
 
 A short end-to-end tour that touches every role:
 
-1. **Sales Staff** — sign in as `sales`. Open an order, review the line-level totals, and submit `SO-2026-0008` for approval.
-2. **Sales Supervisor** — sign in as `supervisor`. Open the approval queue, review stock and credit exposure, and approve the order. If the projected exposure exceeds the customer's credit limit, enter a justification to override.
-3. **Warehouse Staff** — sign in as `warehouse`. Create a delivery for the approved order, dispatch it, then confirm it. Separately, open `DN-2026-0004` and resolve its delivery exception.
-4. **Finance Staff** — sign in as `finance`. Generate an invoice from the confirmed delivery, issue it, then open `PAY-2026-0003` and allocate its unallocated amount to an issued invoice.
-5. **Management** — sign in as `management`. Review the dashboard KPIs, filter by date and customer, then open the audit trail and filter by entity or action.
-6. **Admin** — sign in as `admin`. Review user management and master data, and confirm the same audit visibility.
+1. **Sales Staff** - sign in as `sales`. Open an order, review the line-level totals, and submit `SO-2026-0008` for approval.
+2. **Sales Supervisor** - sign in as `supervisor`. Open the approval queue, review stock and credit exposure, and approve the order. If the projected exposure exceeds the customer's credit limit, enter a justification to override.
+3. **Warehouse Staff** - sign in as `warehouse`. Create a delivery for the approved order, dispatch it, then confirm it. Separately, open `DN-2026-0004` and resolve its delivery exception.
+4. **Finance Staff** - sign in as `finance`. Generate an invoice from the confirmed delivery, issue it, then open `PAY-2026-0003` and allocate its unallocated amount to an issued invoice.
+5. **Management** - sign in as `management`. Review the dashboard KPIs, filter by date and customer, then open the audit trail and filter by entity or action.
+6. **Admin** - sign in as `admin`. Review user management and master data, and confirm the same audit visibility.
 
 ## Testing
 
@@ -367,9 +367,9 @@ Tests:       73 passed, 73 total
 Supporting evidence:
 
 - [`docs/testing/test-plan.md`](docs/testing/test-plan.md)
-- [`docs/testing/uat-scenarios.md`](docs/testing/uat-scenarios.md) — 15 UAT scenarios
+- [`docs/testing/uat-scenarios.md`](docs/testing/uat-scenarios.md) - 15 UAT scenarios
 - [`docs/testing/test-execution-results.md`](docs/testing/test-execution-results.md)
-- [`docs/testing/defect-log.md`](docs/testing/defect-log.md) — 7 defects found and closed
+- [`docs/testing/defect-log.md`](docs/testing/defect-log.md) - 7 defects found and closed
 - [`docs/testing/qa-report.md`](docs/testing/qa-report.md)
 
 ## Limitations and future enhancements

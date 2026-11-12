@@ -78,8 +78,8 @@
                 <div class="cell-sub cell-mono"><%= movement.sku %></div>
               </td>
               <td class="text-sm"><%= movement.warehouse_name %></td>
-              <td class="text-sm text-muted"><%= movement.reference_type || '—' %><%= movement.reference_id ? ' #' + movement.reference_id : '' %></td>
-              <td class="text-sm text-muted"><%= movement.reason || '—' %></td>
+              <td class="text-sm text-muted"><%= movement.reference_type || '-' %><%= movement.reference_id ? ' #' + movement.reference_id : '' %></td>
+              <td class="text-sm text-muted"><%= movement.reason || '-' %></td>
               <td class="right money <%= movement.quantity >= 0 ? 'text-success' : 'text-danger' %>"><%= helpers.number(movement.quantity, 0) %></td>
               <td class="text-sm text-muted"><%= movement.user_name || 'System' %></td>
             </tr>

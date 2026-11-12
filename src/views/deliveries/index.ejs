@@ -153,7 +153,7 @@
               <td class="text-sm text-muted"><%= helpers.date(delivery.delivery_date) %></td>
               <td class="right money"><%= helpers.number(delivery.total_quantity, 2) %></td>
               <td><span class="badge badge-<%= badge(delivery.status) %>"><%= enums.DELIVERY_STATUS[delivery.status] %></span></td>
-              <td class="text-sm text-muted"><%= delivery.created_by_name || '—' %></td>
+              <td class="text-sm text-muted"><%= delivery.created_by_name || '-' %></td>
               <td>
                 <div class="table-actions">
                   <a class="btn btn-secondary btn-sm" href="/deliveries/<%= delivery.id %>">View</a>

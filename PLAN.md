@@ -31,7 +31,7 @@ The final result should demonstrate both business understanding and technical im
 
 ## 3. Project Milestones
 
-### Milestone 0 — Project Initialization
+### Milestone 0 - Project Initialization
 
 **Objective:** Establish the project foundation.
 
@@ -57,7 +57,7 @@ Exit Criteria:
 
 The project scope, objectives, and system boundaries are clearly documented.
 
-### Milestone 1 — Business Analysis and Requirements Engineering
+### Milestone 1 - Business Analysis and Requirements Engineering
 
 **Objective:** Define the business processes and functional requirements.
 
@@ -89,7 +89,7 @@ Exit Criteria:
 
 Every major business process has a defined actor, workflow, business rules, and expected outcome.
 
-### Milestone 2 — System Design and Architecture
+### Milestone 2 - System Design and Architecture
 
 **Objective:** Translate business requirements into a technical design.
 
@@ -119,7 +119,7 @@ Exit Criteria:
 
 The system architecture and database structure are sufficiently defined to begin implementation.
 
-### Milestone 3 — Application Foundation and Authentication
+### Milestone 3 - Application Foundation and Authentication
 
 **Objective:** Establish the application environment.
 
@@ -146,7 +146,7 @@ Exit Criteria:
 
 Authorized users can sign in and access the appropriate application areas.
 
-### Milestone 4 — Master Data and Inventory Management
+### Milestone 4 - Master Data and Inventory Management
 
 **Objective:** Implement foundational business data.
 
@@ -174,7 +174,7 @@ Exit Criteria:
 
 Users can maintain master data and monitor inventory accurately.
 
-### Milestone 5 — Sales Order Management
+### Milestone 5 - Sales Order Management
 
 **Objective:** Implement order creation and submission.
 
@@ -204,7 +204,7 @@ Sales Staff can create and submit valid orders.
 
 **Status:** Completed. Sales orders support draft creation, multi-line editing, submission, role-based visibility, full and partial cancellation with mandatory reasons, and order history. Manual cancellation rights follow the Sales Staff (own draft only) / Sales Supervisor (eligible orders) model.
 
-### Milestone 6 — Order Approval and Inventory Reservation
+### Milestone 6 - Order Approval and Inventory Reservation
 
 **Objective:** Implement supervisor approval and inventory control.
 
@@ -235,7 +235,7 @@ Orders can only be approved when the configured business rules are satisfied.
 
 **Status:** Completed. Supervisors review submitted orders in a dedicated queue with line-level credit exposure and stock panels, approve with stock reservation in the default warehouse, or reject with a mandatory reason. Self-approval is blocked, approval history and audit events are recorded, and the in-transaction stock re-check prevents competing approvals from over-reserving.
 
-### Milestone 7 — Delivery and Fulfillment Management
+### Milestone 7 - Delivery and Fulfillment Management
 
 **Objective:** Connect approved orders to warehouse operations.
 
@@ -263,7 +263,7 @@ Warehouse Staff can dispatch products while maintaining correct inventory and or
 
 **Status:** Completed. Warehouse Staff see a fulfillment queue of approved orders with remaining quantities, create partial deliveries, dispatch stock, confirm delivery, and handle delivery exceptions. Over-delivery is blocked, dispatches require the approval reservation, order status updates on confirmation, and cancelled exceptions reverse stock movements.
 
-### Milestone 8 — Invoice and Accounts Receivable Management
+### Milestone 8 - Invoice and Accounts Receivable Management
 
 **Objective:** Implement invoicing and financial monitoring.
 
@@ -290,7 +290,7 @@ Exit Criteria:
 
 Finance Staff can generate invoices from eligible deliveries and monitor receivables accurately.
 
-### Milestone 9 — Payment Management
+### Milestone 9 - Payment Management
 
 **Objective:** Implement customer payment recording and allocation.
 
@@ -317,7 +317,7 @@ Exit Criteria:
 
 Finance Staff can record payments and allocate them without violating financial business rules.
 
-### Milestone 10 — Dashboard and Reporting
+### Milestone 10 - Dashboard and Reporting
 
 **Objective:** Provide operational and management visibility.
 
@@ -347,7 +347,7 @@ Exit Criteria:
 
 Dashboard information reflects actual system transactions and is not based on hard-coded values.
 
-### Milestone 11 — Testing and Quality Assurance
+### Milestone 11 - Testing and Quality Assurance
 
 **Objective:** Validate system functionality and business process consistency.
 
@@ -379,7 +379,7 @@ Exit Criteria:
 
 All critical business workflows pass their acceptance criteria.
 
-### Milestone 12 — Documentation and Portfolio Preparation
+### Milestone 12 - Documentation and Portfolio Preparation
 
 **Objective:** Prepare the project for public demonstration.
 
@@ -414,19 +414,19 @@ A reviewer can understand the business problem, run the application, and follow 
 
 | Milestone | Status | Notes |
 |---|---|---|
-| M0 — Project Initialization | Completed | Repository, stack, schema, and seed data in place |
-| M1 — Business Analysis and Requirements Engineering | Completed | PRD.md defines stakeholders, processes, rules, and requirements |
-| M2 — System Design and Architecture | Completed | DESIGN.md + `docs/technical-design.md` |
-| M3 — Application Foundation and Authentication | Completed | Login, RBAC, user management, shared layout; auth tests passing |
-| M4 — Master Data and Inventory Management | Completed | Customers, products, categories, warehouses, inventory, movements, adjustments; 19 tests passing |
-| M5 — Sales Order Management | Completed | Order list, detail, create/edit, submit, cancel, history; 33 tests passing |
+| M0 - Project Initialization | Completed | Repository, stack, schema, and seed data in place |
+| M1 - Business Analysis and Requirements Engineering | Completed | PRD.md defines stakeholders, processes, rules, and requirements |
+| M2 - System Design and Architecture | Completed | DESIGN.md + `docs/technical-design.md` |
+| M3 - Application Foundation and Authentication | Completed | Login, RBAC, user management, shared layout; auth tests passing |
+| M4 - Master Data and Inventory Management | Completed | Customers, products, categories, warehouses, inventory, movements, adjustments; 19 tests passing |
+| M5 - Sales Order Management | Completed | Order list, detail, create/edit, submit, cancel, history; 33 tests passing |
 | M6 - Order Approval and Inventory Reservation | Completed | Approval queue, credit/stock review, approve/reject, reservation; 43 tests passing |
 | M7 - Delivery and Fulfillment Management | Completed | Fulfillment queue, partial delivery, dispatch, confirmation, exceptions; 51 tests passing |
 | M8 - Invoice and Accounts Receivable Management | Completed | Invoice list/detail, generation from delivered shipments, draft issue, void/re-invoice, overdue tracking, receivables stats; 59 tests passing |
 | M9 - Payment Management | Completed | Payment list/detail, recording, multi-invoice allocation, partial payments, unallocated tracking, over-allocation guards; 66 tests passing |
-| M10 — Dashboard and Reporting | Completed | Role-aware dashboard (orders, fulfillment, inventory, receivables, overdue invoices, activity), date/customer filters, audit trail viewer; 73 tests passing |
-| M11 — Testing and Quality Assurance | Completed | Test plan, 15 UAT scenarios, traceability matrix, execution results, defect log, QA report; 73 tests passing |
-| M12 — Documentation and Portfolio Preparation | Completed | README, setup/env/demo guides, demo accounts, demo data generator, screenshots, walkthrough, limitations, and documentation index; 73 tests passing |
+| M10 - Dashboard and Reporting | Completed | Role-aware dashboard (orders, fulfillment, inventory, receivables, overdue invoices, activity), date/customer filters, audit trail viewer; 73 tests passing |
+| M11 - Testing and Quality Assurance | Completed | Test plan, 15 UAT scenarios, traceability matrix, execution results, defect log, QA report; 73 tests passing |
+| M12 - Documentation and Portfolio Preparation | Completed | README, setup/env/demo guides, demo accounts, demo data generator, screenshots, walkthrough, limitations, and documentation index; 73 tests passing |
 
 ---
 

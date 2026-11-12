@@ -31,7 +31,7 @@
           <% if (mode === 'create') { %>
             <input class="input" id="code" name="code" type="text" required maxlength="20"
                    value="<%= old.code || '' %>" placeholder="e.g. WH-BDG" style="text-transform:uppercase">
-            <div class="help">3–20 characters · letters, numbers, hyphen.</div>
+            <div class="help">3-20 characters · letters, numbers, hyphen.</div>
           <% } else { %>
             <input class="input" id="code" type="text" value="<%= warehouse.code %>" disabled>
             <div class="help">Warehouse code cannot be changed.</div>

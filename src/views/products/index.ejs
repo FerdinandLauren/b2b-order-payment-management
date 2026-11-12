@@ -76,7 +76,7 @@
             <tr>
               <td class="cell-primary"><%= product.name %></td>
               <td><span class="cell-mono"><%= product.sku %></span></td>
-              <td><%= product.category_name || '—' %></td>
+              <td><%= product.category_name || '-' %></td>
               <td class="text-sm text-muted"><%= product.unit %></td>
               <td class="right money"><%= helpers.rupiah(product.unit_price) %></td>
               <td class="right money"><%= helpers.number(product.on_hand, 0) %></td>

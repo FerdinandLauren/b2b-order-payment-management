@@ -34,7 +34,7 @@ No Critical or High defects remain open. Seven defects found during iterative de
 ## 3. Requirement Coverage
 
 - All P0 functional requirements are covered by automated tests.
-- P1 requirements — dashboard, audit trail, advanced filtering, overdue monitoring — are implemented and verified.
+- P1 requirements - dashboard, audit trail, advanced filtering, overdue monitoring - are implemented and verified.
 - NFRs are addressed through middleware, transactional writes, validation, responsive layout, and fictional seed data. Formal performance and accessibility audits were not performed.
 
 See `test-execution-results.md` for the requirement-group mapping and `uat-scenarios.md` for scenario-level traceability.

@@ -258,7 +258,7 @@
           <div class="meta-row"><span class="meta-label">Code</span><span class="meta-value cell-mono"><%= order.customer_code %></span></div>
           <div class="meta-row"><span class="meta-label">Payment terms</span><span class="meta-value"><%= order.payment_terms_days %> days</span></div>
           <div class="meta-row"><span class="meta-label">Customer status</span><span class="meta-value"><span class="badge badge-<%= badge(order.customer_status) %>"><%= order.customer_status === 'active' ? 'Active' : 'Inactive' %></span></span></div>
-          <div class="meta-row"><span class="meta-label">Created by</span><span class="meta-value"><%= order.created_by_name || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Created by</span><span class="meta-value"><%= order.created_by_name || '-' %></span></div>
           <div class="meta-row"><span class="meta-label">Order date</span><span class="meta-value"><%= helpers.date(order.order_date) %></span></div>
         </div>
       </div>

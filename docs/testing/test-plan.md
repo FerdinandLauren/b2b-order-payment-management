@@ -10,7 +10,7 @@
 
 ## 1. Objectives
 
-1. Verify that every critical Order-to-Cash workflow behaves according to `PRD.md` and the business rules (BR-001 – BR-032).
+1. Verify that every critical Order-to-Cash workflow behaves according to `PRD.md` and the business rules (BR-001 - BR-032).
 2. Verify transaction integrity: no partial writes, no negative stock, no duplicate invoices, no over-allocation.
 3. Verify role-based access control for all six roles.
 4. Verify that dashboard and audit figures are derived from real transactions and respect role visibility.
@@ -66,7 +66,7 @@ The test database is migrated and seeded for every suite. Each suite owns its pr
 ## 5. Test Data
 
 - 6 users, one per role (sales, supervisor, warehouse, finance, management, admin).
-- 8 fictional customers with different payment terms (7–45 days) and credit limits.
+- 8 fictional customers with different payment terms (7-45 days) and credit limits.
 - 15 active products across 3 categories, opening stock in warehouse `WH-JKT`.
 - Transactions are created inside the tests so each suite controls its own state.
 - No production or personal data is used.

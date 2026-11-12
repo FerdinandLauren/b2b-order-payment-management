@@ -93,7 +93,7 @@
               <td class="right money"><%= order.line_count %></td>
               <td class="right money"><%= helpers.rupiah(order.total) %></td>
               <td><span class="badge badge-<%= badge(order.status) %>"><%= enums.ORDER_STATUS[order.status] || order.status %></span></td>
-              <td class="text-sm text-muted"><%= order.created_by_name || '—' %></td>
+              <td class="text-sm text-muted"><%= order.created_by_name || '-' %></td>
               <td>
                 <div class="table-actions">
                   <a class="btn btn-ghost btn-sm" href="/orders/<%= order.id %>">View</a>
