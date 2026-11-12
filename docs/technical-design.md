@@ -576,7 +576,7 @@ products ──< stock_movements
 4. **Approve:** Supervisor reviews the order in the approval queue. If projected exposure exceeds a positive credit limit, an override justification of at least 3 characters is required. Status `submitted → approved`. The system reserves stock in the default warehouse (`on_hand - reserved >= remaining qty`) and records a `reservation` movement per line. If stock is insufficient, approval is blocked with an explanatory error and the order stays `submitted` (the supervisor can still reject it). Approval history and audit log record the action, warehouse, reserved lines, and any credit override. The stock check is repeated inside the transaction so two supervisors cannot over-reserve the same stock.
 5. **Reject:** status `submitted → rejected`, reason required. No reservation.
 6. **Cancel:** eligible orders (`draft`, `submitted`, `approved`, `partially_fulfilled`, `partially_cancelled`) → `cancelled` (nothing delivered and all remaining cancelled), `fulfilled` (delivered > 0 and nothing remains), or `partially_cancelled` (delivered > 0 and remaining quantity still open), reason required. A draft order always cancels in full because it has not entered fulfillment and cannot be edited after partial cancellation. Releases reservation for the cancelled (undelivered) quantities only. Delivered quantities remain unchanged and invoicable.
-7. **Delivery:** Warehouse creates a delivery from an approved order, with quantities ≤ remaining order quantity. Dispatch → stock decrement (`on_hand -= qty`, `reserved -= qty`), status `dispatched`. Confirm → `delivered`. Order status → `partially_fulfilled` / `fulfilled`.
+7. **Delivery:** Warehouse Staff creates a delivery for an approved order with quantities ≤ the remaining (ordered − cancelled − committed) balance. The draft reserves no stock. Dispatch re-checks the balance and available reservation, then decrements `on_hand` and `reserved` and writes a `dispatch` movement. Confirm marks the delivery `delivered` and recalculates the order status from confirmed quantities (`partially_fulfilled` / `fulfilled`). A dispatched delivery can be flagged as a delivery exception and later resolved to `delivered` (confirm) or `cancelled` (reverse the dispatch, restoring `on_hand` and `reserved`). Open draft deliveries and unresolved exceptions block order cancellation.
 8. **Invoice:** Finance generates an invoice from a delivered delivery. One invoice per delivery. Quantities = delivered quantity. Status `draft → issued`. Due date = invoice date + customer payment terms.
 9. **Payment:** Finance records a payment (amount, method, reference). Payment is allocated to invoices of the same customer. Allocation ≤ unallocated payment amount and ≤ invoice outstanding balance. Invoice status updates.
 10. **Dashboard and audit:** Management views KPIs; the audit trail records all important actions.
@@ -627,10 +627,11 @@ available = on_hand - reserved
 ```
 
 - **Reservation (on approval):** `reserved += remaining_qty` per line, plus one `reservation` stock movement per product (`reference_type = 'sales_order'`).
-- **Dispatch:** `on_hand -= qty`, `reserved -= qty`
-- **Cancellation:** `reserved -= remaining_reserved`, plus a `reservation_release` movement; skipped when the order was never approved.
+- **Dispatch:** `on_hand -= qty`, `reserved -= qty`, guarded by `on_hand >= qty` and `reserved >= qty`; writes a `dispatch` movement with a negative quantity.
+- **Delivery exception cancellation:** `on_hand += qty`, `reserved += qty`; writes a `dispatch_reversal` movement.
+- **Order cancellation:** `reserved -= remaining_reserved`, plus a `reservation_release` movement; skipped when the order was never approved. Blocked while a draft delivery or unresolved exception exists.
 
-**Per-order-line reserved quantity** is computed as `order_line.quantity - cancelled_quantity - Σ delivery_lines.quantity` for that line. No separate per-line reservation column is required. Partially cancelled lines keep their delivered quantities invoicable while the cancelled quantity is excluded from fulfillment and reservation.
+**Per-order-line reserved quantity** is computed as `order_line.quantity - cancelled_quantity - Σ delivery_lines.quantity` for deliveries in `dispatched`, `delivered`, or `delivery_exception` status. Draft deliveries hold planned quantity for over-delivery checks but reserve no stock, and cancelled deliveries release it. No separate per-line reservation column is required. Partially cancelled lines keep their delivered quantities invoicable while the cancelled quantity is excluded from fulfillment and reservation.
 
 **Warehouse scope:** reservations and dispatches always apply to the default warehouse configured in `settings.default_warehouse_id` (seeded as `WH-JKT`). The MVP seeds a single active warehouse; multi-warehouse allocation is out of scope. An order line reserves its full remaining quantity against that warehouse at approval time.
 
@@ -691,6 +692,13 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 | dispatched | delivery_exception | exception | reason required |
 | delivery_exception | delivered | resolve | exception resolved; goods received |
 | delivery_exception | cancelled | resolve | exception resolved; goods not received; reverse dispatch stock |
+
+**Order fulfillment rules:**
+
+- Delivered quantity counts only deliveries with status `delivered`. Dispatched-but-unconfirmed quantities remain committed and cannot be delivered again.
+- Confirming a delivery recalculates the order: no delivered quantity and no cancellations → `approved`; delivered > 0 with remaining balance → `partially_fulfilled`; nothing remains → `fulfilled`; no delivered quantity but cancellations exist → `partially_cancelled`.
+- Resolving an exception to `cancelled` reverses the dispatch (`on_hand += qty`, `reserved += qty`) and writes a `dispatch_reversal` movement.
+- A draft delivery reserves no inventory. Dispatching requires the approval reservation to still be present for every line.
 
 **Invoice**
 
@@ -773,7 +781,7 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 | Order cancel | own draft | ✓ | – | – | – | – |
 | Approval queue | – | ✓ | – | – | – | – |
 | Approve / reject | – | ✓ | – | – | – | – |
-| Delivery view | ✓ | ✓ | ✓ | – | ✓ | ✓ |
+| Delivery view | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Delivery create / dispatch / confirm | – | – | ✓ | – | – | – |
 | Invoice view | ✓ | ✓ | – | ✓ | ✓ | ✓ |
 | Invoice generate / issue / void | – | – | – | ✓ | – | – |
@@ -841,12 +849,14 @@ POST   /approvals/:id/approve
 POST   /approvals/:id/reject
 
 GET    /deliveries
+GET    /deliveries/new
 GET    /deliveries/:id
 POST   /deliveries
 POST   /deliveries/:id/dispatch
 POST   /deliveries/:id/confirm
 POST   /deliveries/:id/cancel
 POST   /deliveries/:id/exception
+POST   /deliveries/:id/resolve
 
 GET    /invoices
 GET    /invoices/:id

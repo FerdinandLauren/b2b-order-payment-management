@@ -8,6 +8,13 @@
   const totalQuantity = lines.reduce(function (sum, line) { return sum + line.quantity; }, 0);
   const cancelledTotal = lines.reduce(function (sum, line) { return sum + line.cancelled_quantity; }, 0);
   const deliveredTotal = lines.reduce(function (sum, line) { return sum + line.delivered_quantity; }, 0);
+  const committedTotal = lines.reduce(function (sum, line) { return sum + line.committed_quantity; }, 0);
+  const remainingTotal = lines.reduce(function (sum, line) {
+    return sum + Math.max(0, line.quantity - line.cancelled_quantity - line.committed_quantity);
+  }, 0);
+  const canDeliver = currentUser.role === 'warehouse_staff'
+    && ['approved', 'partially_fulfilled', 'partially_cancelled'].includes(order.status)
+    && remainingTotal > 0;
 %>
 
 <div class="page-head">
@@ -42,6 +49,12 @@
         Review for approval
       </a>
     <% } %>
+    <% if (canDeliver) { %>
+      <a class="btn btn-primary" href="/deliveries/new?orderId=<%= order.id %>">
+        <svg class="icon"><use href="#i-deliveries"></use></svg>
+        Create delivery
+      </a>
+    <% } %>
   </div>
 </div>
 
@@ -59,7 +72,7 @@
   <div class="stat">
     <div class="stat-label">Delivered</div>
     <div class="stat-value"><%= helpers.number(deliveredTotal, 2) %></div>
-    <div class="stat-meta">Quantities confirmed by warehouse</div>
+    <div class="stat-meta"><%= helpers.number(committedTotal, 2) %> committed to deliveries</div>
   </div>
   <div class="stat <%= cancelledTotal > 0 ? 'stat-warning' : '' %>">
     <div class="stat-label">Cancelled</div>
@@ -67,6 +80,15 @@
     <div class="stat-meta">Quantities removed from fulfillment</div>
   </div>
 </div>
+
+<% if (canCancel && hasOpenDeliveries) { %>
+  <div class="alert alert-warning" role="status">
+    <svg class="icon"><use href="#i-alert"></use></svg>
+    <div class="alert-body">
+      <p>This order has an open draft delivery or an unresolved delivery exception. Cancel or resolve it before cancelling the order.</p>
+    </div>
+  </div>
+<% } %>
 
 <div class="detail-grid detail-grid-wide">
   <div>
@@ -117,14 +139,22 @@
       </div>
     </div>
 
-    <% if (deliveries.length) { %>
+    <% if (deliveries.length || canDeliver) { %>
       <div class="card">
         <div class="card-head">
           <div>
             <div class="card-title">Deliveries</div>
             <div class="card-sub">Fulfillment records linked to this order.</div>
           </div>
+          <% if (canDeliver) { %>
+            <a class="btn btn-secondary btn-sm" href="/deliveries/new?orderId=<%= order.id %>">Create delivery</a>
+          <% } %>
         </div>
+        <% if (!deliveries.length) { %>
+          <div class="empty">
+            <div class="empty-text">No delivery has been prepared for this order yet.</div>
+          </div>
+        <% } else { %>
         <div class="table-scroll">
           <table class="table">
             <thead>
@@ -145,6 +175,7 @@
             </tbody>
           </table>
         </div>
+        <% } %>
       </div>
     <% } %>
 
@@ -253,7 +284,7 @@
       </div>
     </div>
 
-    <% if (canCancel) { %>
+    <% if (canCancel && !hasOpenDeliveries) { %>
       <div class="card">
         <div class="card-head">
           <div>
@@ -275,7 +306,7 @@
             <% } else { %>
               <div class="stack">
                 <% lines.forEach(function (line) {
-                     const remaining = Math.max(0, line.quantity - line.cancelled_quantity - line.delivered_quantity);
+                     const remaining = Math.max(0, line.quantity - line.cancelled_quantity - line.committed_quantity);
                 %>
                   <% if (remaining > 0) { %>
                     <div class="field">

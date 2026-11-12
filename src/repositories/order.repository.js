@@ -65,7 +65,12 @@ function findLines(orderId) {
                  FROM delivery_lines dl
                  JOIN deliveries d ON d.id = dl.delivery_id
                 WHERE dl.order_line_id = sol.id
-                  AND d.status IN ('dispatched', 'delivered')) AS delivered_quantity,
+                  AND d.status = 'delivered') AS delivered_quantity,
+              (SELECT COALESCE(SUM(dl.quantity), 0)
+                 FROM delivery_lines dl
+                 JOIN deliveries d ON d.id = dl.delivery_id
+                WHERE dl.order_line_id = sol.id
+                  AND d.status IN ('draft', 'dispatched', 'delivered', 'delivery_exception')) AS committed_quantity,
               (SELECT COALESCE(SUM(il.quantity), 0)
                  FROM invoice_lines il
                  JOIN invoices i ON i.id = il.invoice_id
@@ -224,6 +229,16 @@ function hasDispatchedDeliveries(orderId) {
   return row.count > 0;
 }
 
+function hasOpenDeliveries(orderId) {
+  const row = getDb()
+    .prepare(
+      `SELECT COUNT(*) AS count FROM deliveries
+       WHERE order_id = ? AND status IN ('draft', 'delivery_exception')`
+    )
+    .get(orderId);
+  return row.count > 0;
+}
+
 module.exports = {
   list,
   findById,
@@ -238,4 +253,5 @@ module.exports = {
   cancelLine,
   addApproval,
   hasDispatchedDeliveries,
+  hasOpenDeliveries,
 };

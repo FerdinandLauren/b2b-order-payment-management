@@ -77,7 +77,7 @@
 
     <div class="nav-group">
       <div class="nav-label">Fulfillment</div>
-      <% if (isSales || isWarehouse || isManagement || isAdmin) { %>
+      <% if (isSales || isWarehouse || isFinance || isManagement || isAdmin) { %>
         <a class="nav-link <%= isActive('/deliveries') ? 'active' : '' %>" href="/deliveries">
           <svg class="nav-icon"><use href="#i-deliveries"></use></svg>
           Deliveries

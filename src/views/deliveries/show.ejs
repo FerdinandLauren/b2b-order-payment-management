@@ -1,0 +1,268 @@
+<%- include('../partials/head') %>
+
+<%
+  const totalQuantity = lines.reduce(function (sum, line) { return sum + line.quantity; }, 0);
+  const remainingOrder = orderLines.reduce(function (sum, line) {
+    return sum + Math.max(0, line.quantity - line.cancelled_quantity - line.committed_quantity);
+  }, 0);
+%>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Fulfillment · Delivery</div>
+    <h1 class="page-title"><%= delivery.delivery_number %></h1>
+    <p class="page-sub">
+      <span class="badge badge-<%= badge(delivery.status) %>"><%= enums.DELIVERY_STATUS[delivery.status] %></span>
+      · <%= delivery.customer_name %> · <%= helpers.date(delivery.delivery_date) %>
+    </p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/deliveries">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Deliveries
+    </a>
+    <a class="btn btn-secondary" href="/orders/<%= delivery.order_id %>">
+      <svg class="icon"><use href="#i-eye"></use></svg>
+      Sales order
+    </a>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Delivered quantity</div>
+    <div class="stat-value"><%= helpers.number(totalQuantity, 2) %></div>
+    <div class="stat-meta"><%= lines.length %> line<%= lines.length === 1 ? '' : 's' %></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Order remaining</div>
+    <div class="stat-value"><%= helpers.number(remainingOrder, 2) %></div>
+    <div class="stat-meta">Still to be delivered on the order</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Order status</div>
+    <div class="stat-value stat-value-sm"><%= enums.ORDER_STATUS[order.status] %></div>
+    <div class="stat-meta"><%= order.order_number %></div>
+  </div>
+  <div class="stat <%= delivery.status === 'delivery_exception' ? 'stat-danger' : '' %>">
+    <div class="stat-label">Dispatch</div>
+    <div class="stat-value stat-value-sm"><%= delivery.dispatched_at ? helpers.datetime(delivery.dispatched_at) : 'Not dispatched' %></div>
+    <div class="stat-meta">
+      <% if (delivery.delivered_at) { %>
+        Delivered <%= helpers.datetime(delivery.delivered_at) %>
+      <% } else { %>
+        Stock is issued on dispatch
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<% if (delivery.status === 'delivery_exception') { %>
+  <div class="alert alert-danger" role="status">
+    <svg class="icon"><use href="#i-alert"></use></svg>
+    <div class="alert-body">
+      <p><strong>Delivery exception:</strong> <%= delivery.exception_reason %></p>
+      <p>Resolve the exception as delivered or cancelled. Cancelling restores the dispatched stock and reservation.</p>
+    </div>
+  </div>
+<% } %>
+
+<div class="detail-grid detail-grid-wide">
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Delivery lines</div>
+          <div class="card-sub">Quantities recorded for this delivery.</div>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="right">Ordered</th>
+              <th class="right">Cancelled</th>
+              <th class="right">Delivering</th>
+              <th class="right">Unit price</th>
+              <th class="right">Line value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% lines.forEach(function (line) { %>
+              <tr>
+                <td>
+                  <div class="cell-primary"><%= line.product_name %></div>
+                  <div class="cell-sub cell-mono"><%= line.sku %> · <%= line.unit %></div>
+                </td>
+                <td class="right money"><%= helpers.number(line.ordered_quantity, 2) %></td>
+                <td class="right money"><%= helpers.number(line.cancelled_quantity, 2) %></td>
+                <td class="right money fw-600"><%= helpers.number(line.quantity, 2) %></td>
+                <td class="right money"><%= helpers.rupiah(line.unit_price) %></td>
+                <td class="right money"><%= helpers.rupiah(line.quantity * line.unit_price) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="right fw-600">Delivery value</td>
+              <td class="right money fw-600"><%= helpers.number(totalQuantity, 2) %></td>
+              <td></td>
+              <td class="right money fw-600">
+                <%= helpers.rupiah(lines.reduce(function (sum, line) { return sum + line.quantity * line.unit_price; }, 0)) %>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <% if (delivery.notes) { %>
+        <div class="card-body">
+          <div class="meta-list">
+            <div class="meta-row meta-row-block">
+              <span class="meta-label">Notes</span>
+              <span class="meta-value"><%= delivery.notes %></span>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Sales order</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="meta-list">
+          <div class="meta-row meta-row-block">
+            <span class="meta-label">Order</span>
+            <span class="meta-value"><a class="link" href="/orders/<%= order.id %>"><%= order.order_number %></a></span>
+          </div>
+          <div class="meta-row"><span class="meta-label">Status</span><span class="meta-value"><span class="badge badge-<%= badge(order.status) %>"><%= enums.ORDER_STATUS[order.status] %></span></span></div>
+          <div class="meta-row"><span class="meta-label">Order date</span><span class="meta-value"><%= helpers.date(order.order_date) %></span></div>
+          <div class="meta-row"><span class="meta-label">Customer</span><span class="meta-value"><a class="link" href="/customers/<%= delivery.customer_id %>"><%= delivery.customer_name %></a></span></div>
+          <div class="meta-row"><span class="meta-label">Payment terms</span><span class="meta-value"><%= delivery.payment_terms_days %> days</span></div>
+          <div class="meta-row"><span class="meta-label">Created by</span><span class="meta-value"><%= delivery.created_by_name || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Created</span><span class="meta-value"><%= helpers.datetime(delivery.created_at) %></span></div>
+        </div>
+      </div>
+    </div>
+
+    <% if (isWarehouse) { %>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Fulfillment actions</div>
+            <div class="card-sub">Follow the delivery through dispatch, confirmation, and exception handling.</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <% if (delivery.status === 'draft') { %>
+            <form method="post" action="/deliveries/<%= delivery.id %>/dispatch"
+                  data-confirm="Dispatch this delivery? Stock will be issued from the default warehouse.">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="alert alert-info" role="status">
+                <svg class="icon"><use href="#i-alert"></use></svg>
+                <div class="alert-body"><p>Dispatch reduces on-hand and reserved stock. Confirm the delivery once the customer receives the goods.</p></div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">
+                  <svg class="icon"><use href="#i-deliveries"></use></svg>
+                  Dispatch delivery
+                </button>
+              </div>
+            </form>
+
+            <div class="divider"></div>
+
+            <form method="post" action="/deliveries/<%= delivery.id %>/cancel"
+                  data-confirm="Cancel this draft delivery?">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="field">
+                <label for="cancelReason">Cancellation reason <span class="req">*</span></label>
+                <textarea class="textarea" id="cancelReason" name="reason" maxlength="300" required
+                          placeholder="e.g. Delivery rescheduled at the customer's request"></textarea>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-danger" type="submit">Cancel delivery</button>
+              </div>
+            </form>
+          <% } else if (delivery.status === 'dispatched') { %>
+            <form method="post" action="/deliveries/<%= delivery.id %>/confirm"
+                  data-confirm="Confirm that the customer received this delivery?">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="alert alert-info" role="status">
+                <svg class="icon"><use href="#i-alert"></use></svg>
+                <div class="alert-body"><p>Confirming updates the delivered quantities and the sales order fulfillment status.</p></div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">
+                  <svg class="icon"><use href="#i-check"></use></svg>
+                  Confirm delivered
+                </button>
+              </div>
+            </form>
+
+            <div class="divider"></div>
+
+            <form method="post" action="/deliveries/<%= delivery.id %>/exception"
+                  data-confirm="Report a delivery exception?">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="field">
+                <label for="exceptionReason">Exception reason <span class="req">*</span></label>
+                <textarea class="textarea" id="exceptionReason" name="reason" maxlength="300" required
+                          placeholder="e.g. Customer rejected the goods due to damaged packaging"></textarea>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-secondary" type="submit">Report exception</button>
+              </div>
+            </form>
+          <% } else if (delivery.status === 'delivery_exception') { %>
+            <form method="post" action="/deliveries/<%= delivery.id %>/resolve"
+                  data-confirm="Resolve this delivery exception?">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="field">
+                <label for="outcome">Resolution</label>
+                <select class="select" id="outcome" name="outcome" required>
+                  <option value="delivered">Delivered — the customer received the goods</option>
+                  <option value="cancelled">Cancelled — the goods were not received</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="note">Resolution note</label>
+                <textarea class="textarea" id="note" name="note" maxlength="300"
+                          placeholder="Describe how the exception was resolved"></textarea>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Resolve exception</button>
+              </div>
+            </form>
+          <% } else { %>
+            <p class="help">This delivery is <%= enums.DELIVERY_STATUS[delivery.status].toLowerCase() %> and has no further fulfillment actions.</p>
+          <% } %>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Fulfillment status</div>
+            <div class="card-sub">Only Warehouse Staff can dispatch or confirm deliveries.</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="meta-list">
+            <div class="meta-row"><span class="meta-label">Status</span><span class="meta-value"><span class="badge badge-<%= badge(delivery.status) %>"><%= enums.DELIVERY_STATUS[delivery.status] %></span></span></div>
+            <div class="meta-row"><span class="meta-label">Dispatched</span><span class="meta-value"><%= delivery.dispatched_at ? helpers.datetime(delivery.dispatched_at) : '—' %></span></div>
+            <div class="meta-row"><span class="meta-label">Delivered</span><span class="meta-value"><%= delivery.delivered_at ? helpers.datetime(delivery.delivered_at) : '—' %></span></div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

@@ -1,0 +1,174 @@
+<%- include('../partials/head') %>
+
+<%
+  const inTransit = deliveries.filter(function (d) { return d.status === 'dispatched'; }).length;
+  const exceptions = deliveries.filter(function (d) { return d.status === 'delivery_exception'; }).length;
+  const delivered = deliveries.filter(function (d) { return d.status === 'delivered'; }).length;
+%>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Fulfillment · Order-to-Cash</div>
+    <h1 class="page-title">Deliveries</h1>
+    <p class="page-sub">Prepare, dispatch, and confirm deliveries against approved sales orders while keeping stock and order balances in sync.</p>
+  </div>
+  <% if (isWarehouse) { %>
+    <div class="page-actions">
+      <a class="btn btn-primary" href="/deliveries/new">
+        <svg class="icon"><use href="#i-plus"></use></svg>
+        New delivery
+      </a>
+    </div>
+  <% } %>
+</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Deliveries shown</div>
+    <div class="stat-value"><%= deliveries.length %></div>
+    <div class="stat-meta">Matching the current filter</div>
+  </div>
+  <div class="stat <%= inTransit ? 'stat-warning' : '' %>">
+    <div class="stat-label">In transit</div>
+    <div class="stat-value"><%= inTransit %></div>
+    <div class="stat-meta">Dispatched, awaiting confirmation</div>
+  </div>
+  <div class="stat <%= exceptions ? 'stat-danger' : 'stat-success' %>">
+    <div class="stat-label">Delivery exceptions</div>
+    <div class="stat-value"><%= exceptions %></div>
+    <div class="stat-meta">Require resolution</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Delivered</div>
+    <div class="stat-value"><%= delivered %></div>
+    <div class="stat-meta">Confirmed by the warehouse</div>
+  </div>
+</div>
+
+<% if (isWarehouse && board.orders.length) { %>
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Ready to fulfill</div>
+        <div class="card-sub">Approved orders with quantities that have not been committed to a delivery yet.</div>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Order status</th>
+            <th class="right">Ordered</th>
+            <th class="right">Committed</th>
+            <th class="right">Remaining</th>
+            <th class="right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% board.orders.forEach(function (order) { %>
+            <tr>
+              <td><a class="link" href="/orders/<%= order.id %>"><%= order.order_number %></a></td>
+              <td>
+                <div class="cell-primary"><%= order.customer_name %></div>
+                <div class="cell-sub cell-mono"><%= order.customer_code %></div>
+              </td>
+              <td><span class="badge badge-<%= badge(order.status) %>"><%= enums.ORDER_STATUS[order.status] %></span></td>
+              <td class="right money"><%= helpers.number(order.order_quantity, 2) %></td>
+              <td class="right money"><%= helpers.number(order.committed_quantity, 2) %></td>
+              <td class="right money"><%= helpers.number(order.order_quantity - order.committed_quantity, 2) %></td>
+              <td>
+                <div class="table-actions">
+                  <a class="btn btn-secondary btn-sm" href="/deliveries/new?orderId=<%= order.id %>">Create delivery</a>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<form class="filter-bar" method="get" action="/deliveries">
+  <div class="field">
+    <label for="q">Search</label>
+    <input class="input input-sm" id="q" name="q" type="text" value="<%= filters.q %>" placeholder="Delivery, order, or customer">
+  </div>
+  <div class="field">
+    <label for="status">Status</label>
+    <select class="select input-sm" id="status" name="status">
+      <option value="">All statuses</option>
+      <% statuses.forEach(function (status) { %>
+        <option value="<%= status %>" <%= filters.status === status ? 'selected' : '' %>><%= enums.DELIVERY_STATUS[status] %></option>
+      <% }); %>
+    </select>
+  </div>
+  <button class="btn btn-secondary btn-sm" type="submit">
+    <svg class="icon"><use href="#i-search"></use></svg>
+    Filter
+  </button>
+  <a class="btn btn-ghost btn-sm" href="/deliveries">Reset</a>
+  <div class="filter-spacer"></div>
+  <span class="text-xs text-muted"><%= deliveries.length %> deliver<%= deliveries.length === 1 ? 'y' : 'ies' %></span>
+</form>
+
+<% if (!deliveries.length) { %>
+  <div class="table-wrap">
+    <div class="empty">
+      <div class="empty-icon"><svg class="icon"><use href="#i-deliveries"></use></svg></div>
+      <div class="empty-title">No deliveries yet</div>
+      <div class="empty-text">Approved orders can be prepared for dispatch from this page.</div>
+      <% if (isWarehouse) { %>
+        <a class="btn btn-primary" href="/deliveries/new">Create a delivery</a>
+      <% } %>
+    </div>
+  </div>
+<% } else { %>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Delivery</th>
+            <th>Sales order</th>
+            <th>Customer</th>
+            <th>Delivery date</th>
+            <th class="right">Quantity</th>
+            <th>Status</th>
+            <th>Created by</th>
+            <th class="right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% deliveries.forEach(function (delivery) { %>
+            <tr>
+              <td><a class="link" href="/deliveries/<%= delivery.id %>"><%= delivery.delivery_number %></a></td>
+              <td><a class="link" href="/orders/<%= delivery.order_id %>"><%= delivery.order_number %></a></td>
+              <td>
+                <div class="cell-primary"><%= delivery.customer_name %></div>
+                <div class="cell-sub cell-mono"><%= delivery.customer_code %></div>
+              </td>
+              <td class="text-sm text-muted"><%= helpers.date(delivery.delivery_date) %></td>
+              <td class="right money"><%= helpers.number(delivery.total_quantity, 2) %></td>
+              <td><span class="badge badge-<%= badge(delivery.status) %>"><%= enums.DELIVERY_STATUS[delivery.status] %></span></td>
+              <td class="text-sm text-muted"><%= delivery.created_by_name || '—' %></td>
+              <td>
+                <div class="table-actions">
+                  <a class="btn btn-secondary btn-sm" href="/deliveries/<%= delivery.id %>">View</a>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <span><%= deliveries.length %> deliver<%= deliveries.length === 1 ? 'y' : 'ies' %></span>
+      <span>Dispatch reduces on-hand and reserved stock</span>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../partials/foot') %>

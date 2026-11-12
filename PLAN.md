@@ -240,17 +240,17 @@ Orders can only be approved when the configured business rules are satisfied.
 **Objective:** Connect approved orders to warehouse operations.
 
 Tasks:
-- [ ] Create warehouse fulfillment queue.
-- [ ] Implement delivery creation.
-- [ ] Implement delivery detail page.
-- [ ] Support partial deliveries.
-- [ ] Implement dispatched quantity tracking.
-- [ ] Implement remaining quantity calculation.
-- [ ] Implement stock dispatch.
-- [ ] Implement delivery status management.
-- [ ] Prevent over-delivery.
-- [ ] Update sales order fulfillment status.
-- [ ] Add automated tests.
+- [x] Create warehouse fulfillment queue.
+- [x] Implement delivery creation.
+- [x] Implement delivery detail page.
+- [x] Support partial deliveries.
+- [x] Implement dispatched quantity tracking.
+- [x] Implement remaining quantity calculation.
+- [x] Implement stock dispatch.
+- [x] Implement delivery status management.
+- [x] Prevent over-delivery.
+- [x] Update sales order fulfillment status.
+- [x] Add automated tests.
 
 Expected Deliverables:
 - Delivery management module.
@@ -260,6 +260,8 @@ Expected Deliverables:
 Exit Criteria:
 
 Warehouse Staff can dispatch products while maintaining correct inventory and order balances.
+
+**Status:** Completed. Warehouse Staff see a fulfillment queue of approved orders with remaining quantities, create partial deliveries, dispatch stock, confirm delivery, and handle delivery exceptions. Over-delivery is blocked, dispatches require the approval reservation, order status updates on confirmation, and cancelled exceptions reverse stock movements.
 
 ### Milestone 8 — Invoice and Accounts Receivable Management
 
@@ -414,7 +416,7 @@ A reviewer can understand the business problem, run the application, and follow 
 | M4 — Master Data and Inventory Management | Completed | Customers, products, categories, warehouses, inventory, movements, adjustments; 19 tests passing |
 | M5 — Sales Order Management | Completed | Order list, detail, create/edit, submit, cancel, history; 33 tests passing |
 | M6 - Order Approval and Inventory Reservation | Completed | Approval queue, credit/stock review, approve/reject, reservation; 43 tests passing |
-| M7 — Delivery and Fulfillment Management | Not Started | |
+| M7 - Delivery and Fulfillment Management | Completed | Fulfillment queue, partial delivery, dispatch, confirmation, exceptions; 51 tests passing |
 | M8 — Invoice and Accounts Receivable Management | Not Started | |
 | M9 — Payment Management | Not Started | |
 | M10 — Dashboard and Reporting | Not Started | |
@@ -560,3 +562,4 @@ The project is complete when the MVP workflow is functional, critical acceptance
 | 1.2 | 2026-11-12 | Credit exposure includes the current order; partial order cancellation added to Milestone 6. |
 | 1.3 | 2026-11-12 | Milestone 5 completed; partial cancellation and draft full-cancel rules delivered with order management. |
 | 1.4 | 2026-11-12 | Milestone 6 completed; approval queue, line-level credit exposure, stock reservation, and self-approval guard delivered. |
+| 1.5 | 2026-11-12 | Milestone 7 completed; partial deliveries, dispatch, confirmation, delivery exceptions, and fulfillment status updates delivered. |

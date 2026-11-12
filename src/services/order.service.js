@@ -45,6 +45,7 @@ function getOrder(id) {
     approvals: orderRepository.listApprovals(id),
     deliveries: orderRepository.listDeliveries(id),
     invoices: orderRepository.listInvoices(id),
+    hasOpenDeliveries: orderRepository.hasOpenDeliveries(id),
   };
 }
 
@@ -274,7 +275,10 @@ function canCancel(order, actor) {
 }
 
 function remainingQuantity(line) {
-  return Math.max(0, line.quantity - line.cancelled_quantity - line.delivered_quantity);
+  return Math.max(
+    0,
+    line.quantity - line.cancelled_quantity - (line.committed_quantity || 0)
+  );
 }
 
 function normalizeCancelQuantities(body, lines, order) {
@@ -324,6 +328,12 @@ function cancelOrder(id, body, actor, ipAddress) {
 
   if (!canCancel(order, actor)) {
     throw new ApiError(403, 'You are not allowed to cancel this order in its current status.');
+  }
+  if (orderRepository.hasOpenDeliveries(order.id)) {
+    throw new ApiError(
+      400,
+      'Cancel open draft deliveries or resolve delivery exceptions before cancelling this order.'
+    );
   }
 
   const reason = String(body.reason || '').trim();

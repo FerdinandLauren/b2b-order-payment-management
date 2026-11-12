@@ -13,7 +13,10 @@ function roundMoney(value) {
 }
 
 function remainingQuantity(line) {
-  return Math.max(0, line.quantity - line.cancelled_quantity - line.delivered_quantity);
+  return Math.max(
+    0,
+    line.quantity - line.cancelled_quantity - (line.committed_quantity || 0)
+  );
 }
 
 function creditAssessment(order, lines) {
