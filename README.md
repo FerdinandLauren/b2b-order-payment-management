@@ -324,7 +324,7 @@ Key records to explore:
 | Record | Why it is interesting |
 |---|---|
 | `SO-2026-0001` | Fulfilled order with a partially paid, overdue invoice |
-| `SO-2026-0003` | Partially fulfilled order with a second delivery still open |
+| `SO-2026-0003` | Partially fulfilled order with a remaining quantity still to deliver |
 | `SO-2026-0004` | Approved order with a delivery exception to resolve |
 | `SO-2026-0006` | Credit-limit override with justification in the audit trail |
 | `SO-2026-0007` | Submitted order waiting in the approval queue |
