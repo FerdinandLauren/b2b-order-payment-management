@@ -1,7 +1,7 @@
 # Project Plan
 # B2B Order & Payment Management System
 
-**Version:** 1.0  
+**Version:** 1.8  
 **Project Methodology:** Iterative Development  
 **Planning Approach:** Balanced  
 **Project Objective:** Build a functional B2B Order-to-Cash Management System with strong business process documentation.
@@ -322,16 +322,20 @@ Finance Staff can record payments and allocate them without violating financial 
 **Objective:** Provide operational and management visibility.
 
 Tasks:
-- [ ] Create dashboard layout.
-- [ ] Implement sales order KPIs.
-- [ ] Implement order status distribution.
-- [ ] Implement inventory overview.
-- [ ] Implement fulfillment monitoring.
-- [ ] Implement outstanding receivables summary.
-- [ ] Implement overdue invoice monitoring.
-- [ ] Implement recent activity feed.
-- [ ] Implement date filters.
-- [ ] Verify dashboard calculations.
+- [x] Create dashboard layout.
+- [x] Implement sales order KPIs.
+- [x] Implement order status distribution.
+- [x] Implement inventory overview.
+- [x] Implement fulfillment monitoring.
+- [x] Implement outstanding receivables summary.
+- [x] Implement overdue invoice monitoring.
+- [x] Implement recent activity feed.
+- [x] Implement date filters.
+- [x] Implement customer filter.
+- [x] Enforce role-based visibility for finance, inventory, and audit sections.
+- [x] Implement audit trail viewer with entity, action, and date filters.
+- [x] Verify dashboard calculations.
+- [x] Add automated tests.
 
 Expected Deliverables:
 - Management dashboard.
@@ -419,7 +423,7 @@ A reviewer can understand the business problem, run the application, and follow 
 | M7 - Delivery and Fulfillment Management | Completed | Fulfillment queue, partial delivery, dispatch, confirmation, exceptions; 51 tests passing |
 | M8 - Invoice and Accounts Receivable Management | Completed | Invoice list/detail, generation from delivered shipments, draft issue, void/re-invoice, overdue tracking, receivables stats; 59 tests passing |
 | M9 - Payment Management | Completed | Payment list/detail, recording, multi-invoice allocation, partial payments, unallocated tracking, over-allocation guards; 66 tests passing |
-| M10 — Dashboard and Reporting | Not Started | |
+| M10 — Dashboard and Reporting | Completed | Role-aware dashboard (orders, fulfillment, inventory, receivables, overdue invoices, activity), date/customer filters, audit trail viewer; 73 tests passing |
 | M11 — Testing and Quality Assurance | Not Started | |
 | M12 — Documentation and Portfolio Preparation | Not Started | |
 
@@ -565,3 +569,4 @@ The project is complete when the MVP workflow is functional, critical acceptance
 | 1.5 | 2026-11-12 | Milestone 7 completed; partial deliveries, dispatch, confirmation, delivery exceptions, and fulfillment status updates delivered. |
 | 1.6 | 2026-11-12 | Milestone 8 completed; per-delivery invoicing, draft issuance, void/re-invoice, overdue monitoring, and receivables stats delivered. |
 | 1.7 | 2026-11-12 | Milestone 9 completed; payment recording, multi-invoice allocation, partial payments, unallocated tracking, and over-allocation guards delivered. |
+| 1.8 | 2026-11-12 | Milestone 10 completed; role-aware dashboard with date/customer filters, receivables and overdue monitoring, activity feed, and audit trail viewer delivered. |

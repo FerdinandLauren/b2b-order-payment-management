@@ -10,6 +10,10 @@
         <a class="btn btn-on-dark btn-sm" href="<%= action.href %>"><%= action.label %></a>
       <% }); %>
     </div>
+    <div class="dash-period">
+      <svg class="icon icon-sm"><use href="#i-clock"></use></svg>
+      <%= filters.rangeLabel %><% if (filters.customerName) { %> · <%= filters.customerName %><% } %>
+    </div>
   </div>
   <div class="welcome-status">
     <div class="welcome-date"><%= todayLabel %></div>
@@ -17,83 +21,449 @@
       <svg class="icon icon-sm"><use href="#i-lock"></use></svg>
       <%= roleLabel %> access
     </div>
-  </div>
-</div>
-
-<div class="card">
-  <div class="card-head">
-    <div>
-      <div class="eyebrow">Process reference</div>
-      <div class="card-title">Order-to-Cash flow</div>
-      <div class="card-sub">Every order follows the same controlled lifecycle, from capture to receivable settlement.</div>
-    </div>
-  </div>
-  <div class="flow">
-    <div class="flow-step">
-      <div class="flow-no">01</div>
-      <div class="flow-title">Order capture</div>
-      <div class="flow-text">Customer, products, quantities, negotiated prices.</div>
-    </div>
-    <div class="flow-step">
-      <div class="flow-no">02</div>
-      <div class="flow-title">Validation</div>
-      <div class="flow-text">Active customer, valid products, positive quantities.</div>
-    </div>
-    <div class="flow-step">
-      <div class="flow-no">03</div>
-      <div class="flow-title">Approval</div>
-      <div class="flow-text">Credit exposure review and supervisor decision.</div>
-    </div>
-    <div class="flow-step">
-      <div class="flow-no">04</div>
-      <div class="flow-title">Reservation</div>
-      <div class="flow-text">Stock reserved atomically when the order is approved.</div>
-    </div>
-    <div class="flow-step">
-      <div class="flow-no">05</div>
-      <div class="flow-title">Delivery</div>
-      <div class="flow-text">Partial dispatch, confirmation, or exception handling.</div>
-    </div>
-    <div class="flow-step">
-      <div class="flow-no">06</div>
-      <div class="flow-title">Invoice</div>
-      <div class="flow-text">One invoice per delivery, due date from payment terms.</div>
-    </div>
-    <div class="flow-step">
-      <div class="flow-no">07</div>
-      <div class="flow-title">Payment</div>
-      <div class="flow-text">Allocation, outstanding balance, overdue monitoring.</div>
+    <div class="dash-status-strip">
+      <% if (orders.pendingApprovals > 0) { %>
+        <span class="dash-strip-chip"><strong><%= orders.pendingApprovals %></strong> awaiting approval</span>
+      <% } %>
+      <% if (finance && finance.overdueCount > 0) { %>
+        <span class="dash-strip-chip"><strong><%= finance.overdueCount %></strong> overdue invoice<%= finance.overdueCount === 1 ? '' : 's' %></span>
+      <% } %>
+      <% if (fulfillment.exceptions > 0) { %>
+        <span class="dash-strip-chip"><strong><%= fulfillment.exceptions %></strong> delivery exception<%= fulfillment.exceptions === 1 ? '' : 's' %></span>
+      <% } %>
     </div>
   </div>
 </div>
 
-<div class="grid-3 mt-2">
+<form class="filter-bar" method="get" action="/dashboard">
+  <div class="field">
+    <label for="dateFrom">From date</label>
+    <input class="input input-sm" id="dateFrom" name="dateFrom" type="date" value="<%= filters.dateFrom %>">
+  </div>
+  <div class="field">
+    <label for="dateTo">To date</label>
+    <input class="input input-sm" id="dateTo" name="dateTo" type="date" value="<%= filters.dateTo %>">
+  </div>
+  <div class="field">
+    <label for="customerId">Customer</label>
+    <select class="select input-sm" id="customerId" name="customerId">
+      <option value="">All customers</option>
+      <% customers.forEach(function (customer) { %>
+        <option value="<%= customer.id %>" <%= String(filters.customerId) === String(customer.id) ? 'selected' : '' %>>
+          <%= customer.code %> · <%= customer.name %><%= customer.status !== 'active' ? ' (inactive)' : '' %>
+        </option>
+      <% }); %>
+    </select>
+  </div>
+  <button class="btn btn-secondary btn-sm" type="submit">
+    <svg class="icon"><use href="#i-search"></use></svg>
+    Apply
+  </button>
+  <a class="btn btn-ghost btn-sm" href="/dashboard">Reset</a>
+  <div class="filter-spacer"></div>
+  <span class="text-xs text-muted">
+    <% if (filters.isFiltered) { %>
+      Filtered view · <a class="link" href="/dashboard">clear filters</a>
+    <% } else { %>
+      Live data from actual transactions
+    <% } %>
+  </span>
+</form>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-icon"><svg class="icon"><use href="#i-orders"></use></svg></div>
+    <div class="stat-label">Sales orders</div>
+    <div class="stat-value"><%= helpers.number(orders.total) %></div>
+    <div class="stat-meta"><%= helpers.rupiah(orders.totalValue) %> total order value</div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon"><svg class="icon"><use href="#i-chart"></use></svg></div>
+    <div class="stat-label">Open orders</div>
+    <div class="stat-value"><%= helpers.number(orders.openOrders) %></div>
+    <div class="stat-meta">Approved and awaiting fulfillment</div>
+  </div>
+  <div class="stat <%= orders.pendingApprovals > 0 ? 'stat-warning' : '' %>">
+    <div class="stat-icon"><svg class="icon"><use href="#i-approvals"></use></svg></div>
+    <div class="stat-label">Pending approval</div>
+    <div class="stat-value"><%= helpers.number(orders.pendingApprovals) %></div>
+    <div class="stat-meta">Supervisor decision required</div>
+  </div>
+  <div class="stat <%= fulfillment.exceptions > 0 ? 'stat-danger' : 'stat-success' %>">
+    <div class="stat-icon"><svg class="icon"><use href="#i-deliveries"></use></svg></div>
+    <div class="stat-label">Fulfillment rate</div>
+    <div class="stat-value"><%= helpers.percent(fulfillment.rate) %></div>
+    <div class="stat-meta"><%= helpers.number(fulfillment.deliveredUnits) %> of <%= helpers.number(fulfillment.orderedUnits) %> units delivered</div>
+  </div>
+</div>
+
+<div class="grid-2">
   <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Order status distribution</div>
+        <div class="card-sub">Orders dated within the selected period.</div>
+      </div>
+      <a class="btn btn-secondary btn-sm" href="/orders">View orders</a>
+    </div>
     <div class="card-body">
-      <div class="stat-label">Business rules enforced</div>
-      <div class="stat-value">28</div>
-      <div class="stat-meta">Documented rules mapped to system behavior</div>
+      <% if (!orders.total) { %>
+        <div class="dash-empty">No sales orders match the current filters.</div>
+      <% } else { %>
+        <div class="dist-bar" role="img" aria-label="Order status distribution">
+          <% orders.statuses.forEach(function (status) { %>
+            <% if (status.count > 0) { %>
+              <span class="dist-seg seg-<%= status.status %>" style="width: <%= status.percent %>%" title="<%= status.label %>: <%= status.count %>"></span>
+            <% } %>
+          <% }); %>
+        </div>
+        <div class="dist-list">
+          <% orders.statuses.forEach(function (status) { %>
+            <div class="dist-row">
+              <span class="dist-dot seg-<%= status.status %>"></span>
+              <span class="dist-label"><%= status.label %></span>
+              <span class="dist-value-col"><%= helpers.rupiah(status.value) %></span>
+              <span class="dist-value"><%= helpers.number(status.count) %></span>
+              <span class="dist-pct"><%= helpers.percent(status.percent) %></span>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
     </div>
   </div>
+
   <div class="card">
-    <div class="card-body">
-      <div class="stat-label">Controlled roles</div>
-      <div class="stat-value">6</div>
-      <div class="stat-meta">Least privilege and segregation of duties</div>
+    <div class="card-head">
+      <div>
+        <div class="card-title">Fulfillment monitoring</div>
+        <div class="card-sub">Delivered units against approved order quantities.</div>
+      </div>
+      <a class="btn btn-secondary btn-sm" href="/deliveries">Deliveries</a>
     </div>
-  </div>
-  <div class="card">
     <div class="card-body">
-      <div class="stat-label">Transaction integrity</div>
-      <div class="stat-value stat-value-sm">Atomic writes</div>
-      <div class="stat-meta">Approval, delivery, invoice, and payment flows</div>
+      <div class="dash-progress-head">
+        <div>
+          <div class="dash-progress-label">Fulfillment progress</div>
+          <div class="dash-progress-value"><%= helpers.percent(fulfillment.rate) %></div>
+        </div>
+        <div class="text-xs text-muted"><%= helpers.number(fulfillment.openUnits) %> units remaining</div>
+      </div>
+      <div class="progress <%= fulfillment.rate >= 100 ? 'progress-success' : fulfillment.exceptions > 0 ? 'progress-warning' : '' %>">
+        <span style="width: <%= Math.min(100, fulfillment.rate) %>%"></span>
+      </div>
+
+      <div class="dash-mini-grid mt-2">
+        <div class="dash-mini">
+          <div class="dash-mini-label">Deliveries</div>
+          <div class="dash-mini-value"><%= helpers.number(fulfillment.total) %></div>
+          <div class="dash-mini-meta"><%= helpers.number(fulfillment.delivered) %> delivered</div>
+        </div>
+        <div class="dash-mini">
+          <div class="dash-mini-label">In transit</div>
+          <div class="dash-mini-value"><%= helpers.number(fulfillment.dispatched) %></div>
+          <div class="dash-mini-meta"><%= helpers.number(fulfillment.draft) %> draft to prepare</div>
+        </div>
+        <div class="dash-mini">
+          <div class="dash-mini-label">Exceptions</div>
+          <div class="dash-mini-value <%= fulfillment.exceptions > 0 ? 'text-danger' : '' %>"><%= helpers.number(fulfillment.exceptions) %></div>
+          <div class="dash-mini-meta"><%= helpers.number(fulfillment.cancelled) %> cancelled</div>
+        </div>
+        <div class="dash-mini">
+          <div class="dash-mini-label">Delivered units</div>
+          <div class="dash-mini-value"><%= helpers.number(fulfillment.deliveredUnits) %></div>
+          <div class="dash-mini-meta">of <%= helpers.number(fulfillment.orderedUnits) %> ordered</div>
+        </div>
+      </div>
+
+      <div class="stat-meta">
+        <span class="<%= fulfillment.exceptions > 0 ? 'text-danger' : 'text-success' %>">
+          <%= fulfillment.exceptions > 0 ? fulfillment.exceptions + ' shipment(s) need attention' : 'No open delivery exceptions' %>
+        </span>
+      </div>
     </div>
   </div>
 </div>
+
+<% if (inventory || finance) { %>
+  <div class="grid-2 mt-2">
+    <% if (inventory) { %>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Inventory overview</div>
+            <div class="card-sub">Active products across all warehouses, as of today.</div>
+          </div>
+          <a class="btn btn-secondary btn-sm" href="/inventory">Inventory</a>
+        </div>
+        <div class="card-body">
+          <div class="dash-mini-grid">
+            <div class="dash-mini">
+              <div class="dash-mini-label">Active SKUs</div>
+              <div class="dash-mini-value"><%= helpers.number(inventory.skuCount) %></div>
+              <div class="dash-mini-meta"><%= helpers.number(inventory.reservedSkus) %> with reservations</div>
+            </div>
+            <div class="dash-mini">
+              <div class="dash-mini-label">On hand</div>
+              <div class="dash-mini-value"><%= helpers.number(inventory.onHand) %></div>
+              <div class="dash-mini-meta">Physical stock units</div>
+            </div>
+            <div class="dash-mini">
+              <div class="dash-mini-label">Reserved</div>
+              <div class="dash-mini-value"><%= helpers.number(inventory.reserved) %></div>
+              <div class="dash-mini-meta"><%= helpers.percent(inventory.utilization) %> of on-hand stock</div>
+            </div>
+            <div class="dash-mini">
+              <div class="dash-mini-label">Available</div>
+              <div class="dash-mini-value <%= inventory.outOfStock > 0 ? 'text-warning' : 'text-success' %>"><%= helpers.number(inventory.available) %></div>
+              <div class="dash-mini-meta"><%= helpers.number(inventory.outOfStock) %> SKU<%= inventory.outOfStock === 1 ? '' : 's' %> out of stock</div>
+            </div>
+          </div>
+
+          <div class="dash-progress-head">
+            <div class="dash-progress-label">Stock utilization</div>
+            <div class="text-xs text-muted"><%= helpers.number(inventory.reserved) %> reserved / <%= helpers.number(inventory.onHand) %> on hand</div>
+          </div>
+          <div class="progress progress-warning mb-2">
+            <span style="width: <%= Math.min(100, inventory.utilization) %>%"></span>
+          </div>
+
+          <% if (inventory.topProducts.length) { %>
+            <div class="table-scroll">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th class="right">On hand</th>
+                    <th class="right">Reserved</th>
+                    <th class="right">Available</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% inventory.topProducts.forEach(function (product) { %>
+                    <tr>
+                      <td>
+                        <div class="cell-primary"><%= product.name %></div>
+                        <div class="cell-sub cell-mono"><%= product.sku %></div>
+                      </td>
+                      <td class="right money"><%= helpers.number(product.on_hand) %></td>
+                      <td class="right money"><%= helpers.number(product.reserved) %></td>
+                      <td class="right money <%= Number(product.available) <= 0 ? 'text-danger fw-600' : 'fw-600' %>"><%= helpers.number(product.available) %></td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="dash-empty">No active inventory balances recorded yet.</div>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (finance) { %>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Outstanding receivables</div>
+            <div class="card-sub">Issued invoices with a remaining balance, as of today.</div>
+          </div>
+          <a class="btn btn-secondary btn-sm" href="/invoices?view=outstanding">Receivables</a>
+        </div>
+        <div class="card-body">
+          <div class="stat-value stat-value-sm"><%= helpers.rupiah(finance.outstanding) %></div>
+          <div class="stat-meta"><%= helpers.number(finance.openCount) %> open invoice<%= finance.openCount === 1 ? '' : 's' %> · <%= helpers.rupiah(finance.paymentsReceived) %> received in period</div>
+
+          <div class="dash-mini-grid mt-2">
+            <div class="dash-mini">
+              <div class="dash-mini-label">Current</div>
+              <div class="dash-mini-value dash-mini-value-sm"><%= helpers.rupiah(finance.currentAmount) %></div>
+              <div class="dash-mini-meta">Not yet due</div>
+            </div>
+            <div class="dash-mini">
+              <div class="dash-mini-label">Overdue</div>
+              <div class="dash-mini-value dash-mini-value-sm <%= finance.overdueAmount > 0 ? 'text-danger' : 'text-success' %>"><%= helpers.rupiah(finance.overdueAmount) %></div>
+              <div class="dash-mini-meta"><%= helpers.number(finance.overdueCount) %> invoice<%= finance.overdueCount === 1 ? '' : 's' %></div>
+            </div>
+            <div class="dash-mini">
+              <div class="dash-mini-label">Draft invoices</div>
+              <div class="dash-mini-value"><%= helpers.number(finance.draftInvoices) %></div>
+              <div class="dash-mini-meta">Awaiting issue</div>
+            </div>
+            <div class="dash-mini">
+              <div class="dash-mini-label">Unallocated payments</div>
+              <div class="dash-mini-value dash-mini-value-sm"><%= helpers.rupiah(finance.unallocatedPayments) %></div>
+              <div class="dash-mini-meta"><%= helpers.number(finance.paymentsCount) %> payment<%= finance.paymentsCount === 1 ? '' : 's' %> in period</div>
+            </div>
+          </div>
+
+          <div class="dash-progress-head">
+            <div class="dash-progress-label">Overdue share of receivables</div>
+            <div class="text-xs text-muted"><%= helpers.percent(finance.overdueShare) %></div>
+          </div>
+          <div class="progress <%= finance.overdueAmount > 0 ? 'progress-danger' : 'progress-success' %>">
+            <span style="width: <%= Math.min(100, finance.overdueShare) %>%"></span>
+          </div>
+
+          <div class="alert alert-info mt-2" role="status">
+            <svg class="icon"><use href="#i-invoices"></use></svg>
+            <div class="alert-body">
+              <p>Draft invoices do not affect receivables or credit exposure until Finance issues them.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+<% } %>
+
+<div class="grid-2 mt-2">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Recent sales orders</div>
+        <div class="card-sub">Latest orders matching the selected filters.</div>
+      </div>
+      <a class="btn btn-secondary btn-sm" href="/orders">All orders</a>
+    </div>
+    <% if (!recentOrders.length) { %>
+      <div class="empty">
+        <div class="empty-icon"><svg class="icon"><use href="#i-orders"></use></svg></div>
+        <div class="empty-text">No sales orders match the current filters.</div>
+      </div>
+    <% } else { %>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th class="right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% recentOrders.forEach(function (order) { %>
+              <tr>
+                <td><a class="link" href="/orders/<%= order.id %>"><%= order.order_number %></a></td>
+                <td>
+                  <div class="cell-primary"><%= order.customer_name %></div>
+                  <div class="cell-sub cell-mono"><%= order.customer_code %></div>
+                </td>
+                <td class="text-sm text-muted"><%= helpers.date(order.order_date) %></td>
+                <td><span class="badge badge-<%= badge(order.status) %>"><%= enums.ORDER_STATUS[order.status] %></span></td>
+                <td class="right money"><%= helpers.rupiah(order.total) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Recent business activity</div>
+        <div class="card-sub">Latest audited actions across the Order-to-Cash flow.</div>
+      </div>
+      <% if (visibility.audit) { %>
+        <a class="btn btn-secondary btn-sm" href="/audit">Audit trail</a>
+      <% } %>
+    </div>
+    <div class="card-body dash-activity">
+      <% if (!activity.length) { %>
+        <div class="dash-empty">No business activity recorded yet.</div>
+      <% } else { %>
+        <div class="timeline">
+          <% activity.forEach(function (entry) { %>
+            <div class="timeline-item">
+              <span class="timeline-dot"></span>
+              <div class="timeline-title">
+                <% if (entry.href) { %>
+                  <a href="<%= entry.href %>"><%= entry.label %></a>
+                <% } else { %>
+                  <%= entry.label %>
+                <% } %>
+              </div>
+              <div class="timeline-meta">
+                <span><%= entry.userName %></span>
+                <span>·</span>
+                <span><%= helpers.datetime(entry.createdAt) %></span>
+                <span>·</span>
+                <span class="badge badge-<%= entry.tone %>"><%= entry.entityLabel %></span>
+              </div>
+              <div class="timeline-text"><%= entry.summary %></div>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<% if (visibility.finance) { %>
+  <div class="card mt-2">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Overdue invoices</div>
+        <div class="card-sub">Issued invoices past their due date with an outstanding balance.</div>
+      </div>
+      <a class="btn btn-secondary btn-sm" href="/invoices?view=overdue">All overdue</a>
+    </div>
+    <% if (!overdueInvoices.length) { %>
+      <div class="empty">
+        <div class="empty-icon"><svg class="icon"><use href="#i-check"></use></svg></div>
+        <div class="empty-title">No overdue invoices</div>
+        <div class="empty-text">Every issued invoice is either current or fully paid.</div>
+      </div>
+    <% } else { %>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Invoice</th>
+              <th>Customer</th>
+              <th>Invoice date</th>
+              <th>Due date</th>
+              <th>Days overdue</th>
+              <th class="right">Outstanding</th>
+              <th class="right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% overdueInvoices.forEach(function (invoice) { %>
+              <tr>
+                <td><a class="link" href="/invoices/<%= invoice.id %>"><%= invoice.invoice_number %></a></td>
+                <td>
+                  <div class="cell-primary"><%= invoice.customer_name %></div>
+                  <div class="cell-sub cell-mono"><%= invoice.customer_code %></div>
+                </td>
+                <td class="text-sm text-muted"><%= helpers.date(invoice.invoice_date) %></td>
+                <td class="text-sm"><%= helpers.date(invoice.due_date) %></td>
+                <td><span class="badge badge-danger"><%= invoice.days_overdue %> day<%= invoice.days_overdue === 1 ? '' : 's' %></span></td>
+                <td class="right money fw-600"><%= helpers.rupiah(invoice.balance) %></td>
+                <td>
+                  <div class="table-actions">
+                    <a class="btn btn-secondary btn-sm" href="/invoices/<%= invoice.id %>">View</a>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-foot">
+        <span>Showing the <%= overdueInvoices.length %> most overdue invoice<%= overdueInvoices.length === 1 ? '' : 's' %></span>
+        <span>Days overdue calculated as of <%= todayLabel %></span>
+      </div>
+    <% } %>
+  </div>
+<% } %>
 
 <p class="text-xs text-muted mt-3">
-  This dashboard is being implemented milestone by milestone. Operational KPIs will appear here once the
-  Order-to-Cash workflow is complete.
+  Dashboard values are calculated from sales orders, deliveries, stock balances, invoices, payments, and audit records.
+  Date filters apply to transaction dates; receivables and stock figures are current as of <%= todayLabel %>.
 </p>
 
 <%- include('../partials/foot') %>

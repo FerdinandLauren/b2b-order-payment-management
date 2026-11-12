@@ -820,7 +820,7 @@ POST   /login
 POST   /logout
 GET    /forbidden
 
-GET    /dashboard
+GET    /dashboard?dateFrom=&dateTo=&customerId=
 
 GET    /customers
 GET    /customers/new
@@ -898,7 +898,7 @@ POST   /users
 POST   /users/:id
 POST   /users/:id/status
 
-GET    /audit
+GET    /audit?entityType=&action=&dateFrom=&dateTo=&page=
 ```
 
 All routes are protected by `requireAuth`; role-restricted routes add `requireRole`. Because the UI is server-rendered with HTML forms, state-changing routes use `POST` endpoints (no `PUT`/`PATCH`/`DELETE` verbs); action suffixes such as `/status`, `/submit`, and `/approve` express intent.
@@ -918,7 +918,7 @@ All routes are protected by `requireAuth`; role-restricted routes add `requireRo
 | Page | Purpose |
 |---|---|
 | Login | Authentication |
-| Dashboard | KPI cards, charts, recent activity, credit overrides |
+| Dashboard | KPI cards, status distribution, fulfillment, inventory, receivables, recent orders, activity feed |
 | Customers | List, detail, create/edit form |
 | Products | List, detail, create/edit form |
 | Inventory | Stock balances, movement history, adjustments |
@@ -932,17 +932,6 @@ All routes are protected by `requireAuth`; role-restricted routes add `requireRo
 | Warehouses | Admin management of warehouses |
 | Audit | Filterable audit log |
 
-### 9.4 Per-Role Dashboard
-
-| Role | Dashboard contents |
-|---|---|
-| Sales Staff | My orders, order status distribution, recent orders |
-| Sales Supervisor | Sales KPIs, pending approval queue, order status distribution |
-| Warehouse Staff | Fulfillment queue, delivery status, stock overview |
-| Finance Staff | Receivables, overdue invoices, recent payments, invoice status |
-| Management | All KPIs, revenue, overdue, credit overrides, recent activity |
-| Admin | Technical overview, user activity |
-
 ### 9.3 Design Direction
 
 - Clean enterprise layout, neutral palette, clear typography.
@@ -951,7 +940,31 @@ All routes are protected by `requireAuth`; role-restricted routes add `requireRo
 - Forms with inline validation messages.
 - Responsive down to tablet width.
 
-Detailed visual design will use the `design-taste-frontend` / `impeccable` guidance during implementation.
+### 9.4 Per-Role Dashboard
+
+| Role | Dashboard contents |
+|---|---|
+| Sales Staff | Sales order KPIs, order status distribution, recent orders, fulfillment progress, stock overview, receivables, activity feed |
+| Sales Supervisor | Same operational view plus the pending approval count and submitted orders |
+| Warehouse Staff | Fulfillment progress and delivery status, pending approvals, inventory overview, activity feed (no finance sections) |
+| Finance Staff | Sales and fulfillment KPIs, receivables, overdue invoices, draft invoices, unallocated payments, activity feed (no inventory section) |
+| Management | All KPIs, receivables, overdue invoices, inventory, delivery exceptions, recent orders, activity feed, audit link |
+| Admin | Same visibility as Management for operational monitoring, plus administration shortcuts |
+
+Section visibility is enforced server-side in `dashboard.service.js`; the template only renders sections the role is allowed to see.
+
+### 9.5 Dashboard and Reporting Rules
+
+- **Source of truth:** every KPI is calculated from transactional tables (`sales_orders`, `deliveries`, `inventory_balances`, `invoices`, `payments`, `audit_logs`). No KPI is hard-coded.
+- **Date filters** (`dateFrom`, `dateTo`) apply to transaction dates: order date, delivery date, invoice date, and payment date. Receivables and inventory balances are always current as of today, because they represent live balances rather than period movements.
+- **Customer filter** (`customerId`) narrows orders, deliveries, invoices, payments, and overdue invoices. Inactive or unknown customers are ignored.
+- **Invalid filters** are discarded rather than rejected; an inverted date range is swapped so the page still renders.
+- **Order KPIs:** total orders and value, open orders (`approved`, `partially_fulfilled`, `partially_cancelled`), and pending approvals (`submitted`).
+- **Fulfillment rate:** units delivered against ordered units (after cancelled quantities) for orders that reached approval. Delivery status counts are derived from `deliveries`.
+- **Receivables:** sum of `total - allocations` for invoices in `issued` or `partially_paid` with a positive balance. Overdue is the portion whose `due_date` is before today. Draft invoices are excluded until issued.
+- **Inventory:** active products only; on-hand, reserved, and available (`on_hand - reserved`) are aggregated across warehouses.
+- **Recent activity:** latest non-authentication audit records, summarized with entity links.
+- **Audit trail viewer:** management and admin only; filterable by entity type, action, and date, paginated at 25 records per page.
 
 ---
 
@@ -982,7 +995,11 @@ Recorded events:
 | inventory | adjusted |
 | user | created, updated, status_changed |
 
-Each record contains: `user_id`, `action`, `entity_type`, `entity_id`, `details` (JSON), `created_at`.
+Each record contains: `user_id`, `action`, `entity_type`, `entity_id`, `details` (JSON), `created_at`, and `ip_address`.
+
+The audit trail viewer (`/audit`, management and admin only) lists records newest first with pagination (25 per page) and filters for entity type, action, and record date. The management dashboard shows the latest non-authentication records as a read-only activity feed.
+
+Utility `src/utils/audit.js` maps action codes to human labels and badge tones, maps entity types to labels and detail links, and summarizes each record from its `details` payload so the same presentation is reused by the dashboard feed and the audit page.
 
 ---
 

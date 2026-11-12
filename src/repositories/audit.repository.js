@@ -18,7 +18,7 @@ function create({ userId, action, entityType, entityId, details, ipAddress, crea
   return Number(result.lastInsertRowid);
 }
 
-function list({ entityType, action, userId, limit = 100, offset = 0 } = {}) {
+function list({ entityType, action, userId, dateFrom, dateTo, limit = 100, offset = 0 } = {}) {
   const conditions = [];
   const params = [];
 
@@ -33,6 +33,14 @@ function list({ entityType, action, userId, limit = 100, offset = 0 } = {}) {
   if (userId) {
     conditions.push('a.user_id = ?');
     params.push(userId);
+  }
+  if (dateFrom) {
+    conditions.push('substr(a.created_at, 1, 10) >= ?');
+    params.push(dateFrom);
+  }
+  if (dateTo) {
+    conditions.push('substr(a.created_at, 1, 10) <= ?');
+    params.push(dateTo);
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';

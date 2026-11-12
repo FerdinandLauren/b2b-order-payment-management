@@ -1,3 +1,4 @@
+const dashboardService = require('../services/dashboard.service');
 const { ROLES } = require('../utils/constants');
 
 const ROLE_GUIDE = {
@@ -28,15 +29,15 @@ const ROLE_GUIDE = {
     actions: [
       { label: 'Open deliveries', href: '/deliveries' },
       { label: 'Check inventory', href: '/inventory' },
-      { label: 'View approved orders', href: '/orders?status=approved' },
+      { label: 'Stock movements', href: '/inventory/movements' },
     ],
   },
   finance_staff: {
     heading: 'Finance workspace',
     description:
-      'Issue invoices from delivered orders, record customer payments, and monitor receivables.',
+      'Issue invoices from delivered shipments, record customer payments, and keep receivables accurate.',
     actions: [
-      { label: 'Review invoices', href: '/invoices' },
+      { label: 'Generate invoice', href: '/invoices/new' },
       { label: 'Record a payment', href: '/payments/new' },
       { label: 'Monitor receivables', href: '/invoices?view=outstanding' },
     ],
@@ -65,10 +66,13 @@ const ROLE_GUIDE = {
 
 function index(req, res) {
   const role = req.user.role;
+  const data = dashboardService.getDashboard(req.user, req.query);
+
   res.render('dashboard/index', {
     title: 'Dashboard',
     roleLabel: ROLES[role],
     guide: ROLE_GUIDE[role],
+    ...data,
   });
 }
 
