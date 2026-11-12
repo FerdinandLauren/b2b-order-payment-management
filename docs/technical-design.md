@@ -32,7 +32,7 @@ It covers:
 | Architecture | Layered modular: routes → controllers → services → repositories → models |
 | Role model | 6 roles from PRD.md (authoritative) |
 | Credit limit | Warning + supervisor override with mandatory justification |
-| Invoicing | Per delivery (one delivery → one invoice) |
+| Invoicing | Per delivery; at most one active (non-void) invoice per delivery |
 | Tax | Outside MVP; schema kept extensible |
 | Scope | Full O2C + Management Dashboard + Audit Trail |
 
@@ -577,7 +577,7 @@ products ──< stock_movements
 5. **Reject:** status `submitted → rejected`, reason required. No reservation.
 6. **Cancel:** eligible orders (`draft`, `submitted`, `approved`, `partially_fulfilled`, `partially_cancelled`) → `cancelled` (nothing delivered and all remaining cancelled), `fulfilled` (delivered > 0 and nothing remains), or `partially_cancelled` (delivered > 0 and remaining quantity still open), reason required. A draft order always cancels in full because it has not entered fulfillment and cannot be edited after partial cancellation. Releases reservation for the cancelled (undelivered) quantities only. Delivered quantities remain unchanged and invoicable.
 7. **Delivery:** Warehouse Staff creates a delivery for an approved order with quantities ≤ the remaining (ordered − cancelled − committed) balance. The draft reserves no stock. Dispatch re-checks the balance and available reservation, then decrements `on_hand` and `reserved` and writes a `dispatch` movement. Confirm marks the delivery `delivered` and recalculates the order status from confirmed quantities (`partially_fulfilled` / `fulfilled`). A dispatched delivery can be flagged as a delivery exception and later resolved to `delivered` (confirm) or `cancelled` (reverse the dispatch, restoring `on_hand` and `reserved`). Open draft deliveries and unresolved exceptions block order cancellation.
-8. **Invoice:** Finance generates an invoice from a delivered delivery. One invoice per delivery. Quantities = delivered quantity. Status `draft → issued`. Due date = invoice date + customer payment terms.
+8. **Invoice:** Finance generates an invoice from a delivered delivery. One delivery has at most one active (non-void) invoice, and quantities are the still-uninvoiced delivered quantities. The invoice is created as `draft`; Finance must explicitly issue it (`draft → issued`) before it becomes a receivable. Due date = invoice date + customer payment terms. Voiding (`draft` or `issued`) requires a reason, is blocked once payment allocations exist, and resets the delivery's `invoiced_quantity` so a replacement invoice can be generated.
 9. **Payment:** Finance records a payment (amount, method, reference). Payment is allocated to invoices of the same customer. Allocation ≤ unallocated payment amount and ≤ invoice outstanding balance. Invoice status updates.
 10. **Dashboard and audit:** Management views KPIs; the audit trail records all important actions.
 
@@ -599,7 +599,8 @@ open_order_value =
 
 open_value (per order) =
     SUM((line.quantity - line.cancelled_quantity) * line.unit_price)
-    - SUM(invoice_line.line_total FOR non-void invoices
+    - SUM(invoice_line.line_total FOR invoices
+          WITH status IN ('issued', 'partially_paid', 'paid')
           LINKED TO that order line)
 
 current_order =
@@ -612,7 +613,7 @@ current_order =
 
 - Exposure is calculated at the line level so partial deliveries, partial cancellations, and partial invoicing are handled without double counting.
 - Cancelled quantities are excluded from the order value; delivered quantities remain part of the order value until they are invoiced.
-- Non-void invoice lines reduce the order's open value. Voided invoices do not reduce exposure, because they no longer represent a receivable.
+- Only issued, partially paid, and paid invoice lines reduce the order's open value, because those invoices represent a receivable. Draft invoices have not been issued yet and void invoices no longer exist commercially, so neither reduces exposure; the delivery quantity stays counted in `open_order_value` until an invoice is actually issued.
 - The current order is counted fully (minus cancellations) while it is under approval. Once approved it moves into `open_order_value`; it is not counted twice because the order being approved is excluded from the existing-order query.
 - A credit limit of `0` means the customer has no limit and the warning check does not apply.
 - The over-limit condition is `credit_limit > 0 AND projected_exposure > credit_limit`.
@@ -704,12 +705,15 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 
 | From | To | Trigger | Rules |
 |---|---|---|---|
-| draft | issued | issue | delivery is `delivered`; not already invoiced |
+| (new) | draft | generate | delivery is `delivered`; delivery has no active invoice; uninvoiced quantities > 0 |
+| draft | issued | issue | delivery is `delivered`; status must be `draft` |
 | issued | partially_paid | allocate | partial allocation |
 | issued / partially_paid | paid | allocate | balance = 0 |
-| issued | void | void | reason required; only when the invoice has no payment allocations |
+| draft / issued | void | void | reason required; only when the invoice has no payment allocations |
 
-**Void rule:** voiding an invoice releases its delivery lines (`invoiced_quantity` reset to 0) so the delivery can be re-invoiced. Invoices with payment allocations cannot be voided in the MVP.
+**Void rule:** voiding an invoice releases its delivery lines (`invoiced_quantity` reset to 0) so the delivery can be re-invoiced with a new invoice number. Invoices with payment allocations cannot be voided in the MVP. Because a void invoice is ignored by the active-invoice guard, the delivery card offers "Generate replacement invoice" after a void.
+
+**Draft rule:** a generated invoice does not create a receivable and does not change credit exposure. Only `issued`, `partially_paid`, and `paid` invoices are included in outstanding receivables and exposure. Status beyond `issued` is derived from allocations (`deriveStatus`), and `refreshInvoiceStatus` recomputes it after every allocation.
 
 **Payment**
 
@@ -747,7 +751,7 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 | BR-021 | Validators require reason for reject/cancel/void. |
 | BR-022 | Service writes an audit record for every status transition. |
 | BR-023 | Credit warning is computed on submission; approval with warning requires override + justification. |
-| BR-024 | One delivery generates at most one invoice; invoice qty = delivered qty. |
+| BR-024 | One delivery has at most one active (non-void) invoice; invoice qty = still-uninvoiced delivered qty. |
 | BR-025 | A delivery line cannot be invoiced twice. |
 
 ---
@@ -859,6 +863,7 @@ POST   /deliveries/:id/exception
 POST   /deliveries/:id/resolve
 
 GET    /invoices
+GET    /invoices/new
 GET    /invoices/:id
 POST   /invoices
 POST   /invoices/:id/issue

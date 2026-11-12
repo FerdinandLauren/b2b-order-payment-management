@@ -60,7 +60,7 @@ function customerExposure(customerId, excludeOrderId = 0) {
                     JOIN invoices i ON i.id = il.invoice_id
                     JOIN delivery_lines dl ON dl.id = il.delivery_line_id
                     WHERE dl.order_line_id = sol.id
-                      AND i.status <> 'void'
+                      AND i.status IN ('issued', 'partially_paid', 'paid')
                   ), 0) AS open_value
          FROM sales_orders so
          JOIN sales_order_lines sol ON sol.order_id = so.id

@@ -1,0 +1,139 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Finance · Receivables</div>
+    <h1 class="page-title">Invoices</h1>
+    <p class="page-sub">Generate invoices from delivered goods, issue them to customers, and monitor outstanding and overdue receivables.</p>
+  </div>
+  <% if (isFinance) { %>
+    <div class="page-actions">
+      <a class="btn btn-primary" href="/invoices/new">
+        <svg class="icon"><use href="#i-plus"></use></svg>
+        New invoice
+      </a>
+    </div>
+  <% } %>
+</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Outstanding</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(stats.outstanding) %></div>
+    <div class="stat-meta">Issued and partially paid invoices</div>
+  </div>
+  <div class="stat <%= stats.overdueCount ? 'stat-danger' : 'stat-success' %>">
+    <div class="stat-label">Overdue</div>
+    <div class="stat-value"><%= stats.overdueCount %></div>
+    <div class="stat-meta"><%= helpers.rupiah(stats.overdueAmount) %> past due</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Collected</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(stats.collected) %></div>
+    <div class="stat-meta">Allocated customer payments</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Invoices</div>
+    <div class="stat-value"><%= stats.total %></div>
+    <div class="stat-meta"><%= stats.draftCount %> draft · <%= stats.paidCount %> paid</div>
+  </div>
+</div>
+
+<form class="filter-bar" method="get" action="/invoices">
+  <div class="field">
+    <label for="q">Search</label>
+    <input class="input input-sm" id="q" name="q" type="text" value="<%= filters.q %>" placeholder="Invoice, order, delivery, or customer">
+  </div>
+  <div class="field">
+    <label for="status">Status</label>
+    <select class="select input-sm" id="status" name="status">
+      <option value="">All statuses</option>
+      <% statuses.forEach(function (status) { %>
+        <option value="<%= status %>" <%= filters.status === status ? 'selected' : '' %>><%= enums.INVOICE_STATUS[status] %></option>
+      <% }); %>
+    </select>
+  </div>
+  <div class="field">
+    <label for="overdue">Due date</label>
+    <select class="select input-sm" id="overdue" name="overdue">
+      <option value="">All invoices</option>
+      <option value="1" <%= filters.overdue ? 'selected' : '' %>>Overdue only</option>
+    </select>
+  </div>
+  <button class="btn btn-secondary btn-sm" type="submit">
+    <svg class="icon"><use href="#i-search"></use></svg>
+    Filter
+  </button>
+  <a class="btn btn-ghost btn-sm" href="/invoices">Reset</a>
+  <div class="filter-spacer"></div>
+  <span class="text-xs text-muted"><%= invoices.length %> invoice<%= invoices.length === 1 ? '' : 's' %></span>
+</form>
+
+<% if (!invoices.length) { %>
+  <div class="table-wrap">
+    <div class="empty">
+      <div class="empty-icon"><svg class="icon"><use href="#i-invoices"></use></svg></div>
+      <div class="empty-title">No invoices found</div>
+      <div class="empty-text">Delivered sales orders can be invoiced from this page.</div>
+      <% if (isFinance) { %>
+        <a class="btn btn-primary" href="/invoices/new">Generate an invoice</a>
+      <% } %>
+    </div>
+  </div>
+<% } else { %>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Invoice</th>
+            <th>Customer</th>
+            <th>Source</th>
+            <th>Invoice date</th>
+            <th>Due date</th>
+            <th class="right">Total</th>
+            <th class="right">Outstanding</th>
+            <th>Status</th>
+            <th class="right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% invoices.forEach(function (invoice) { %>
+            <tr>
+              <td><a class="link" href="/invoices/<%= invoice.id %>"><%= invoice.invoice_number %></a></td>
+              <td>
+                <div class="cell-primary"><%= invoice.customer_name %></div>
+                <div class="cell-sub cell-mono"><%= invoice.customer_code %></div>
+              </td>
+              <td>
+                <a class="link text-sm" href="/orders/<%= invoice.order_id %>"><%= invoice.order_number %></a>
+                <div class="cell-sub cell-mono"><%= invoice.delivery_number %></div>
+              </td>
+              <td class="text-sm text-muted"><%= helpers.date(invoice.invoice_date) %></td>
+              <td class="text-sm text-muted">
+                <%= helpers.date(invoice.due_date) %>
+                <% if (invoice.is_overdue) { %>
+                  <div><span class="badge badge-danger">Overdue</span></div>
+                <% } %>
+              </td>
+              <td class="right money"><%= helpers.rupiah(invoice.total) %></td>
+              <td class="right money fw-600"><%= helpers.rupiah(invoice.balance) %></td>
+              <td><span class="badge badge-<%= badge(invoice.status) %>"><%= enums.INVOICE_STATUS[invoice.status] %></span></td>
+              <td>
+                <div class="table-actions">
+                  <a class="btn btn-secondary btn-sm" href="/invoices/<%= invoice.id %>">View</a>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <span><%= invoices.length %> invoice<%= invoices.length === 1 ? '' : 's' %></span>
+      <span>Due dates follow customer payment terms</span>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../partials/foot') %>

@@ -151,6 +151,43 @@
       </div>
     </div>
 
+    <% if (invoice || canInvoice) { %>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Invoice</div>
+            <div class="card-sub">Billing document generated from this delivery.</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <% if (invoice) { %>
+            <div class="meta-list">
+              <div class="meta-row">
+                <span class="meta-label">Invoice</span>
+                <span class="meta-value"><a class="link" href="/invoices/<%= invoice.id %>"><%= invoice.invoice_number %></a></span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Status</span>
+                <span class="meta-value"><span class="badge badge-<%= badge(invoice.status) %>"><%= enums.INVOICE_STATUS[invoice.status] %></span></span>
+              </div>
+              <div class="meta-row"><span class="meta-label">Total</span><span class="meta-value"><%= helpers.rupiah(invoice.total) %></span></div>
+              <div class="meta-row"><span class="meta-label">Due date</span><span class="meta-value"><%= helpers.date(invoice.due_date) %></span></div>
+            </div>
+            <% if (canInvoice) { %>
+              <div class="form-actions">
+                <a class="btn btn-primary" href="/invoices/new?deliveryId=<%= delivery.id %>">Generate replacement invoice</a>
+              </div>
+            <% } %>
+          <% } else { %>
+            <p class="help">This delivery is confirmed and has not been invoiced yet.</p>
+            <div class="form-actions">
+              <a class="btn btn-primary" href="/invoices/new?deliveryId=<%= delivery.id %>">Generate invoice</a>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
+
     <% if (isWarehouse) { %>
       <div class="card">
         <div class="card-head">

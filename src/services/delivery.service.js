@@ -36,11 +36,16 @@ function getDelivery(id) {
   const delivery = deliveryRepository.findById(id);
   if (!delivery) throw new ApiError(404, 'Delivery not found.');
 
+  const lines = deliveryRepository.findLines(id);
   return {
     delivery,
-    lines: deliveryRepository.findLines(id),
+    lines,
     order: orderRepository.findById(delivery.order_id),
     orderLines: orderRepository.findLines(delivery.order_id),
+    invoice: deliveryRepository.findInvoiceForDelivery(id),
+    billableQuantity: roundQuantity(
+      lines.reduce((sum, line) => sum + Math.max(0, line.quantity - line.invoiced_quantity), 0)
+    ),
   };
 }
 

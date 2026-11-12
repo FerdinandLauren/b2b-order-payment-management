@@ -62,10 +62,18 @@ function create(req, res, next) {
 function show(req, res, next) {
   try {
     const data = deliveryService.getDelivery(Number(req.params.id));
+    const canInvoice =
+      req.user.role === 'finance_staff' &&
+      data.delivery.status === 'delivered' &&
+      data.billableQuantity > 0 &&
+      (!data.invoice || data.invoice.status === 'void');
+
     res.render('deliveries/show', {
       title: data.delivery.delivery_number,
       ...data,
       isWarehouse: req.user.role === 'warehouse_staff',
+      isFinance: req.user.role === 'finance_staff',
+      canInvoice,
     });
   } catch (error) {
     next(error);

@@ -1,0 +1,242 @@
+<%- include('../partials/head') %>
+
+<% const canVoid = isFinance && ['draft', 'issued'].includes(invoice.status); %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Finance · Receivable</div>
+    <h1 class="page-title"><%= invoice.invoice_number %></h1>
+    <p class="page-sub">
+      <span class="badge badge-<%= badge(invoice.status) %>"><%= enums.INVOICE_STATUS[invoice.status] %></span>
+      <% if (isOverdue) { %>
+        <span class="badge badge-danger">Overdue</span>
+      <% } %>
+      · <%= invoice.customer_name %> · due <%= helpers.date(invoice.due_date) %>
+    </p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/invoices">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Invoices
+    </a>
+    <a class="btn btn-secondary" href="/deliveries/<%= invoice.delivery_id %>">
+      <svg class="icon"><use href="#i-deliveries"></use></svg>
+      Delivery
+    </a>
+    <a class="btn btn-secondary" href="/orders/<%= invoice.order_id %>">
+      <svg class="icon"><use href="#i-orders"></use></svg>
+      Sales order
+    </a>
+    <% if (isFinance && invoice.status === 'draft') { %>
+      <form method="post" action="/invoices/<%= invoice.id %>/issue"
+            data-confirm="Issue this invoice to the customer?">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn-primary" type="submit">
+          <svg class="icon"><use href="#i-check"></use></svg>
+          Issue invoice
+        </button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<% if (isOverdue) { %>
+  <div class="alert alert-danger" role="status">
+    <svg class="icon"><use href="#i-alert"></use></svg>
+    <div class="alert-body">
+      <p><strong>Overdue by <%= daysOverdue %> day<%= daysOverdue === 1 ? '' : 's' %>.</strong> The payment terms have passed and <%= helpers.rupiah(invoice.balance) %> remains outstanding.</p>
+    </div>
+  </div>
+<% } %>
+
+<% if (invoice.status === 'draft') { %>
+  <div class="alert alert-info" role="status">
+    <svg class="icon"><use href="#i-alert"></use></svg>
+    <div class="alert-body">
+      <p>This invoice is still a draft. It becomes a receivable only after it is issued.</p>
+    </div>
+  </div>
+<% } %>
+
+<% if (invoice.status === 'void') { %>
+  <div class="alert alert-warning" role="status">
+    <svg class="icon"><use href="#i-alert"></use></svg>
+    <div class="alert-body">
+      <p><strong>Invoice voided</strong> on <%= helpers.datetime(invoice.voided_at) %>: <%= invoice.void_reason %></p>
+      <p>The delivery quantity has been released and can be invoiced again.</p>
+    </div>
+  </div>
+<% } %>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Invoice total</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(invoice.total) %></div>
+    <div class="stat-meta"><%= lines.length %> line<%= lines.length === 1 ? '' : 's' %></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Allocated</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(invoice.allocated) %></div>
+    <div class="stat-meta">Customer payments applied</div>
+  </div>
+  <div class="stat <%= Number(invoice.balance) > 0 && invoice.status !== 'void' ? 'stat-warning' : 'stat-success' %>">
+    <div class="stat-label">Outstanding</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(invoice.balance) %></div>
+    <div class="stat-meta">Remaining receivable</div>
+  </div>
+  <div class="stat <%= isOverdue ? 'stat-danger' : '' %>">
+    <div class="stat-label">Due date</div>
+    <div class="stat-value stat-value-sm"><%= helpers.date(invoice.due_date) %></div>
+    <div class="stat-meta"><%= invoice.payment_terms_days %> day payment terms</div>
+  </div>
+</div>
+
+<div class="detail-grid detail-grid-wide">
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Invoice lines</div>
+          <div class="card-sub">Billed quantities from delivery <%= invoice.delivery_number %>.</div>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="right">Quantity</th>
+              <th class="right">Unit price</th>
+              <th class="right">Line total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% lines.forEach(function (line) { %>
+              <tr>
+                <td>
+                  <div class="cell-primary"><%= line.product_name %></div>
+                  <div class="cell-sub cell-mono"><%= line.sku %> · <%= line.unit %></div>
+                </td>
+                <td class="right money"><%= helpers.number(line.quantity, 2) %></td>
+                <td class="right money"><%= helpers.rupiah(line.unit_price) %></td>
+                <td class="right money"><%= helpers.rupiah(line.line_total) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="right fw-600">Subtotal</td>
+              <td class="right money fw-600"><%= helpers.rupiah(invoice.subtotal) %></td>
+            </tr>
+            <tr>
+              <td colspan="3" class="right fw-600">Tax (outside MVP)</td>
+              <td class="right money"><%= helpers.rupiah(invoice.tax_amount) %></td>
+            </tr>
+            <tr>
+              <td colspan="3" class="right fw-600">Total</td>
+              <td class="right money fw-600"><%= helpers.rupiah(invoice.total) %></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Payment allocations</div>
+          <div class="card-sub">Payments applied to this invoice.</div>
+        </div>
+      </div>
+      <% if (!allocations.length) { %>
+        <div class="empty">
+          <div class="empty-text">No payments have been allocated to this invoice yet.</div>
+        </div>
+      <% } else { %>
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Payment</th>
+                <th>Payment date</th>
+                <th>Method</th>
+                <th>Reference</th>
+                <th class="right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% allocations.forEach(function (allocation) { %>
+                <tr>
+                  <td><a class="link" href="/payments/<%= allocation.payment_id %>"><%= allocation.payment_number %></a></td>
+                  <td class="text-sm text-muted"><%= helpers.date(allocation.payment_date) %></td>
+                  <td class="text-sm"><%= enums.PAYMENT_METHOD[allocation.method] || allocation.method %></td>
+                  <td class="text-sm text-muted"><%= allocation.reference || '—' %></td>
+                  <td class="right money"><%= helpers.rupiah(allocation.amount) %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Invoice details</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="meta-list">
+          <div class="meta-row meta-row-block">
+            <span class="meta-label">Customer</span>
+            <span class="meta-value"><a class="link" href="/customers/<%= invoice.customer_id %>"><%= invoice.customer_name %></a></span>
+          </div>
+          <div class="meta-row"><span class="meta-label">Customer code</span><span class="meta-value cell-mono"><%= invoice.customer_code %></span></div>
+          <div class="meta-row"><span class="meta-label">Sales order</span><span class="meta-value"><a class="link" href="/orders/<%= invoice.order_id %>"><%= invoice.order_number %></a></span></div>
+          <div class="meta-row"><span class="meta-label">Delivery</span><span class="meta-value"><a class="link" href="/deliveries/<%= invoice.delivery_id %>"><%= invoice.delivery_number %></a></span></div>
+          <div class="meta-row"><span class="meta-label">Invoice date</span><span class="meta-value"><%= helpers.date(invoice.invoice_date) %></span></div>
+          <div class="meta-row"><span class="meta-label">Due date</span><span class="meta-value"><%= helpers.date(invoice.due_date) %></span></div>
+          <div class="meta-row"><span class="meta-label">Payment terms</span><span class="meta-value"><%= invoice.payment_terms_days %> days</span></div>
+          <div class="meta-row"><span class="meta-label">Created by</span><span class="meta-value"><%= invoice.created_by_name || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Issued</span><span class="meta-value"><%= invoice.issued_at ? helpers.datetime(invoice.issued_at) : 'Not issued' %></span></div>
+          <% if (invoice.voided_at) { %>
+            <div class="meta-row"><span class="meta-label">Voided</span><span class="meta-value"><%= helpers.datetime(invoice.voided_at) %></span></div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <% if (canVoid) { %>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Void invoice</div>
+            <div class="card-sub">
+              Voiding releases the delivery quantities so they can be invoiced again.
+              Invoices with payment allocations cannot be voided.
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form method="post" action="/invoices/<%= invoice.id %>/void"
+                data-confirm="Void this invoice? The delivery will become billable again.">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="field">
+              <label for="voidReason">Void reason <span class="req">*</span></label>
+              <textarea class="textarea" id="voidReason" name="reason" maxlength="300" required
+                        placeholder="e.g. Wrong customer billed; reissuing with corrected details"></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-danger" type="submit">Void invoice</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

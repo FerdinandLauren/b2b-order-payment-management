@@ -176,6 +176,20 @@ function openDeliveriesForOrder(orderId) {
     .all(orderId);
 }
 
+function findInvoiceForDelivery(deliveryId) {
+  return (
+    getDb()
+      .prepare(
+        `SELECT id, invoice_number, invoice_date, due_date, status, total
+         FROM invoices
+         WHERE delivery_id = ?
+         ORDER BY id DESC
+         LIMIT 1`
+      )
+      .get(deliveryId) || null
+  );
+}
+
 module.exports = {
   COMMITTED_STATUSES,
   FULFILLABLE_ORDER_STATUSES,
@@ -186,4 +200,5 @@ module.exports = {
   createDelivery,
   setStatus,
   openDeliveriesForOrder,
+  findInvoiceForDelivery,
 };

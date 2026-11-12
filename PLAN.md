@@ -62,18 +62,18 @@ The project scope, objectives, and system boundaries are clearly documented.
 **Objective:** Define the business processes and functional requirements.
 
 Tasks:
-- [ ] Identify stakeholders.
-- [ ] Define user roles and responsibilities.
-- [ ] Analyze the current business problems.
-- [ ] Create the As-Is business process.
-- [ ] Design the To-Be business process.
-- [ ] Define the Order-to-Cash workflow.
-- [ ] Identify business process exceptions.
-- [ ] Define business rules.
-- [ ] Create use cases.
-- [ ] Create user stories.
-- [ ] Define acceptance criteria.
-- [ ] Create requirements traceability matrix.
+- [x] Identify stakeholders.
+- [x] Define user roles and responsibilities.
+- [x] Analyze the current business problems.
+- [x] Create the As-Is business process.
+- [x] Design the To-Be business process.
+- [x] Define the Order-to-Cash workflow.
+- [x] Identify business process exceptions.
+- [x] Define business rules.
+- [x] Create use cases.
+- [x] Create user stories.
+- [x] Define acceptance criteria.
+- [x] Create requirements traceability matrix.
 
 Expected Deliverables:
 - Stakeholder matrix.
@@ -94,17 +94,17 @@ Every major business process has a defined actor, workflow, business rules, and 
 **Objective:** Translate business requirements into a technical design.
 
 Tasks:
-- [ ] Define system architecture.
-- [ ] Define application modules.
-- [ ] Design database entities.
-- [ ] Create Entity Relationship Diagram.
-- [ ] Define database relationships.
-- [ ] Define role-based access control.
-- [ ] Design application navigation.
-- [ ] Design main application screens.
-- [ ] Define transaction workflows.
-- [ ] Define application use cases.
-- [ ] Document important architecture decisions.
+- [x] Define system architecture.
+- [x] Define application modules.
+- [x] Design database entities.
+- [x] Create Entity Relationship Diagram.
+- [x] Define database relationships.
+- [x] Define role-based access control.
+- [x] Design application navigation.
+- [x] Design main application screens.
+- [x] Define transaction workflows.
+- [x] Define application use cases.
+- [x] Document important architecture decisions.
 
 Expected Deliverables:
 - System architecture diagram.
@@ -268,18 +268,18 @@ Warehouse Staff can dispatch products while maintaining correct inventory and or
 **Objective:** Implement invoicing and financial monitoring.
 
 Tasks:
-- [ ] Create invoice list.
-- [ ] Create invoice detail page.
-- [ ] Generate invoices from delivered quantities.
-- [ ] Prevent duplicate invoicing.
-- [ ] Calculate invoice totals.
-- [ ] Calculate due dates.
-- [ ] Implement invoice issue action.
-- [ ] Implement invoice status calculation.
-- [ ] Implement outstanding balance calculation.
-- [ ] Implement overdue invoice identification.
-- [ ] Implement invoice void workflow if included.
-- [ ] Add automated tests.
+- [x] Create invoice list.
+- [x] Create invoice detail page.
+- [x] Generate invoices from delivered quantities.
+- [x] Prevent duplicate invoicing.
+- [x] Calculate invoice totals.
+- [x] Calculate due dates.
+- [x] Implement invoice issue action.
+- [x] Implement invoice status calculation.
+- [x] Implement outstanding balance calculation.
+- [x] Implement overdue invoice identification.
+- [x] Implement invoice void workflow if included.
+- [x] Add automated tests.
 
 Expected Deliverables:
 - Invoice management module.
@@ -417,7 +417,7 @@ A reviewer can understand the business problem, run the application, and follow 
 | M5 — Sales Order Management | Completed | Order list, detail, create/edit, submit, cancel, history; 33 tests passing |
 | M6 - Order Approval and Inventory Reservation | Completed | Approval queue, credit/stock review, approve/reject, reservation; 43 tests passing |
 | M7 - Delivery and Fulfillment Management | Completed | Fulfillment queue, partial delivery, dispatch, confirmation, exceptions; 51 tests passing |
-| M8 — Invoice and Accounts Receivable Management | Not Started | |
+| M8 - Invoice and Accounts Receivable Management | Completed | Invoice list/detail, generation from delivered shipments, draft issue, void/re-invoice, overdue tracking, receivables stats; 59 tests passing |
 | M9 — Payment Management | Not Started | |
 | M10 — Dashboard and Reporting | Not Started | |
 | M11 — Testing and Quality Assurance | Not Started | |
@@ -563,3 +563,4 @@ The project is complete when the MVP workflow is functional, critical acceptance
 | 1.3 | 2026-11-12 | Milestone 5 completed; partial cancellation and draft full-cancel rules delivered with order management. |
 | 1.4 | 2026-11-12 | Milestone 6 completed; approval queue, line-level credit exposure, stock reservation, and self-approval guard delivered. |
 | 1.5 | 2026-11-12 | Milestone 7 completed; partial deliveries, dispatch, confirmation, delivery exceptions, and fulfillment status updates delivered. |
+| 1.6 | 2026-11-12 | Milestone 8 completed; per-delivery invoicing, draft issuance, void/re-invoice, overdue monitoring, and receivables stats delivered. |

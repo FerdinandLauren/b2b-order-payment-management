@@ -11,6 +11,7 @@ router.use('/inventory', require('./inventory.routes'));
 router.use('/orders', require('./order.routes'));
 router.use('/approvals', require('./approval.routes'));
 router.use('/deliveries', require('./delivery.routes'));
+router.use('/invoices', require('./invoice.routes'));
 router.use('/users', require('./user.routes'));
 router.use('/', require('./dashboard.routes'));
 
