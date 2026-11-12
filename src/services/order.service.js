@@ -374,6 +374,10 @@ function cancelOrder(id, body, actor, ipAddress) {
     let nextStatus;
     if (remainingTotal <= 1e-9) {
       nextStatus = deliveredTotal > 1e-9 ? 'fulfilled' : 'cancelled';
+    } else if (order.status === 'submitted') {
+      // The remainder still has to pass approval, so a partially cancelled
+      // submitted order stays in the queue instead of dropping out of the flow.
+      nextStatus = 'submitted';
     } else {
       nextStatus = 'partially_cancelled';
     }

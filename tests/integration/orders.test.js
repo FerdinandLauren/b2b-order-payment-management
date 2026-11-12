@@ -235,13 +235,14 @@ describe('Sales order management', () => {
 
     const page = await supervisor.get(response.headers.location).expect(200);
     expect(page.text).toContain('partial cancellation');
-    expect(page.text).toContain('Partially Cancelled');
+    expect(page.text).toContain('Submitted');
     expect(page.text).toContain('Customer reduced the order scope');
 
     const updated = linesOf(orderId);
     expect(updated[0].cancelled_quantity).toBe(2);
     expect(updated[0].cancellation_reason).toBe('Customer reduced the order scope');
     expect(updated[1].cancelled_quantity).toBe(1);
+    expect(statusOf(orderId).status).toBe('submitted');
 
     const approvals = getDb()
       .prepare("SELECT * FROM order_approvals WHERE order_id = ? AND action = 'partially_cancelled'")

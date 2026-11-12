@@ -1,0 +1,106 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Sales · Approval</div>
+    <h1 class="page-title">Approval queue</h1>
+    <p class="page-sub">Review submitted orders, check customer credit exposure and stock availability, then approve or reject them.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/orders">
+      <svg class="icon"><use href="#i-orders"></use></svg>
+      All orders
+    </a>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Awaiting approval</div>
+    <div class="stat-value"><%= queue.length %></div>
+    <div class="stat-meta">Submitted orders in the queue</div>
+  </div>
+  <div class="stat <%= queue.filter(function (item) { return item.credit.exceeds; }).length ? 'stat-warning' : '' %>">
+    <div class="stat-label">Credit warnings</div>
+    <div class="stat-value"><%= queue.filter(function (item) { return item.credit.exceeds; }).length %></div>
+    <div class="stat-meta">Require an override justification</div>
+  </div>
+  <div class="stat <%= queue.filter(function (item) { return item.stock.hasShortage; }).length ? 'stat-danger' : 'stat-success' %>">
+    <div class="stat-label">Stock shortages</div>
+    <div class="stat-value"><%= queue.filter(function (item) { return item.stock.hasShortage; }).length %></div>
+    <div class="stat-meta">Orders that cannot be reserved yet</div>
+  </div>
+</div>
+
+<% if (!queue.length) { %>
+  <div class="table-wrap">
+    <div class="empty">
+      <div class="empty-icon"><svg class="icon"><use href="#i-approvals"></use></svg></div>
+      <div class="empty-title">The approval queue is clear</div>
+      <div class="empty-text">New submitted orders will appear here automatically.</div>
+      <a class="btn btn-secondary" href="/orders">View sales orders</a>
+    </div>
+  </div>
+<% } else { %>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Submitted</th>
+            <th class="right">Lines</th>
+            <th class="right">Total</th>
+            <th>Credit</th>
+            <th>Stock</th>
+            <th>Created by</th>
+            <th class="right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% queue.forEach(function (item) { %>
+            <tr>
+              <td><a class="link" href="/approvals/<%= item.order.id %>"><%= item.order.order_number %></a></td>
+              <td>
+                <div class="cell-primary"><%= item.order.customer_name %></div>
+                <div class="cell-sub cell-mono"><%= item.order.customer_code %></div>
+              </td>
+              <td class="text-sm text-muted"><%= helpers.datetime(item.order.submitted_at) %></td>
+              <td class="right money"><%= item.order.line_count %></td>
+              <td class="right money"><%= helpers.rupiah(item.order.total) %></td>
+              <td>
+                <% if (!item.credit.hasLimit) { %>
+                  <span class="badge badge-neutral">No limit</span>
+                <% } else if (item.credit.exceeds) { %>
+                  <span class="badge badge-danger">Over by <%= helpers.rupiah(item.credit.excess) %></span>
+                <% } else { %>
+                  <span class="badge badge-success">Within limit</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (item.stock.hasShortage) { %>
+                  <span class="badge badge-danger">Shortage</span>
+                <% } else { %>
+                  <span class="badge badge-success">Available</span>
+                <% } %>
+              </td>
+              <td class="text-sm text-muted"><%= item.order.created_by_name || '—' %></td>
+              <td>
+                <div class="table-actions">
+                  <a class="btn btn-primary btn-sm" href="/approvals/<%= item.order.id %>">Review</a>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <span><%= queue.length %> order<%= queue.length === 1 ? '' : 's' %> awaiting approval</span>
+      <span>Approval reserves stock in the default warehouse</span>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../partials/foot') %>

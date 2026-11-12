@@ -209,19 +209,19 @@ Sales Staff can create and submit valid orders.
 **Objective:** Implement supervisor approval and inventory control.
 
 Tasks:
-- [ ] Create approval queue.
-- [ ] Implement order review screen.
-- [ ] Implement approval action.
-- [ ] Implement rejection action.
-- [ ] Implement rejection reason validation.
-- [ ] Implement inventory availability validation.
-- [ ] Implement customer credit exposure validation.
-- [ ] Implement stock reservation.
-- [ ] Implement reservation release.
+- [x] Create approval queue.
+- [x] Implement order review screen.
+- [x] Implement approval action.
+- [x] Implement rejection action.
+- [x] Implement rejection reason validation.
+- [x] Implement inventory availability validation.
+- [x] Implement customer credit exposure validation.
+- [x] Implement stock reservation.
+- [x] Implement reservation release.
 - [x] Implement partial order cancellation. *(Delivered in M5 for submitted/approved orders.)*
-- [ ] Implement approval history.
-- [ ] Implement audit events.
-- [ ] Test concurrent reservation scenarios.
+- [x] Implement approval history.
+- [x] Implement audit events.
+- [x] Test concurrent reservation scenarios.
 
 Expected Deliverables:
 - Approval management module.
@@ -232,6 +232,8 @@ Expected Deliverables:
 Exit Criteria:
 
 Orders can only be approved when the configured business rules are satisfied.
+
+**Status:** Completed. Supervisors review submitted orders in a dedicated queue with line-level credit exposure and stock panels, approve with stock reservation in the default warehouse, or reject with a mandatory reason. Self-approval is blocked, approval history and audit events are recorded, and the in-transaction stock re-check prevents competing approvals from over-reserving.
 
 ### Milestone 7 — Delivery and Fulfillment Management
 
@@ -411,7 +413,7 @@ A reviewer can understand the business problem, run the application, and follow 
 | M3 — Application Foundation and Authentication | Completed | Login, RBAC, user management, shared layout; auth tests passing |
 | M4 — Master Data and Inventory Management | Completed | Customers, products, categories, warehouses, inventory, movements, adjustments; 19 tests passing |
 | M5 — Sales Order Management | Completed | Order list, detail, create/edit, submit, cancel, history; 33 tests passing |
-| M6 — Order Approval and Inventory Reservation | Not Started | |
+| M6 - Order Approval and Inventory Reservation | Completed | Approval queue, credit/stock review, approve/reject, reservation; 43 tests passing |
 | M7 — Delivery and Fulfillment Management | Not Started | |
 | M8 — Invoice and Accounts Receivable Management | Not Started | |
 | M9 — Payment Management | Not Started | |
@@ -557,3 +559,4 @@ The project is complete when the MVP workflow is functional, critical acceptance
 | 1.1 | 2026-11-12 | Technology stack selected; progress tracking added; demo scenario updated for per-delivery invoicing. |
 | 1.2 | 2026-11-12 | Credit exposure includes the current order; partial order cancellation added to Milestone 6. |
 | 1.3 | 2026-11-12 | Milestone 5 completed; partial cancellation and draft full-cancel rules delivered with order management. |
+| 1.4 | 2026-11-12 | Milestone 6 completed; approval queue, line-level credit exposure, stock reservation, and self-approval guard delivered. |

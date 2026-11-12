@@ -36,6 +36,12 @@
         <button class="btn btn-primary" type="submit">Submit for approval</button>
       </form>
     <% } %>
+    <% if (order.status === 'submitted' && currentUser.role === 'sales_supervisor') { %>
+      <a class="btn btn-primary" href="/approvals/<%= order.id %>">
+        <svg class="icon"><use href="#i-approvals"></use></svg>
+        Review for approval
+      </a>
+    <% } %>
   </div>
 </div>
 

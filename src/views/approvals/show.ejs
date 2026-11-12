@@ -1,0 +1,333 @@
+<%- include('../partials/head') %>
+
+<%
+  const totalQuantity = lines.reduce(function (sum, line) { return sum + line.quantity; }, 0);
+  const cancelledTotal = lines.reduce(function (sum, line) { return sum + line.cancelled_quantity; }, 0);
+  const remainingTotal = lines.reduce(function (sum, line) {
+    return sum + Math.max(0, line.quantity - line.cancelled_quantity - line.delivered_quantity);
+  }, 0);
+  const canApprove = !isOwnOrder && !stock.hasShortage;
+%>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Sales · Approval review</div>
+    <h1 class="page-title"><%= order.order_number %></h1>
+    <p class="page-sub">
+      <span class="badge badge-<%= badge(order.status) %>"><%= enums.ORDER_STATUS[order.status] %></span>
+      · <%= order.customer_name %> · submitted <%= helpers.datetime(order.submitted_at) %>
+    </p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/approvals">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Queue
+    </a>
+    <a class="btn btn-secondary" href="/orders/<%= order.id %>">
+      <svg class="icon"><use href="#i-eye"></use></svg>
+      Open order
+    </a>
+  </div>
+</div>
+
+<% if (isOwnOrder) { %>
+  <div class="alert alert-danger" role="status">
+    <svg class="icon"><use href="#i-lock"></use></svg>
+    <div class="alert-body">
+      <p>You created this order, so segregation of duties prevents you from approving or rejecting it. Another Sales Supervisor must review it.</p>
+    </div>
+  </div>
+<% } %>
+
+<% if (stock.hasShortage) { %>
+  <div class="alert alert-danger" role="status">
+    <svg class="icon"><use href="#i-alert"></use></svg>
+    <div class="alert-body">
+      <p>Stock is insufficient in <%= stock.warehouseName || 'the default warehouse' %>. Approval is blocked until stock is received or the order is reduced.</p>
+      <% stock.shortages.forEach(function (item) { %>
+        <p><strong><%= item.productName %></strong>: requested <%= helpers.number(item.requested, 2) %> <%= item.unit %>, available <%= helpers.number(item.available, 2) %>.</p>
+      <% }); %>
+    </div>
+  </div>
+<% } %>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Order total</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(order.total) %></div>
+    <div class="stat-meta"><%= lines.length %> line<%= lines.length === 1 ? '' : 's' %>, <%= helpers.number(totalQuantity, 2) %> units</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Remaining to reserve</div>
+    <div class="stat-value"><%= helpers.number(remainingTotal, 2) %></div>
+    <div class="stat-meta"><%= helpers.number(cancelledTotal, 2) %> cancelled before approval</div>
+  </div>
+  <div class="stat <%= credit.exceeds ? 'stat-danger' : 'stat-success' %>">
+    <div class="stat-label">Projected exposure</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(credit.projectedExposure) %></div>
+    <div class="stat-meta">
+      <% if (!credit.hasLimit) { %>
+        Customer has no credit limit
+      <% } else { %>
+        Limit <%= helpers.rupiah(credit.creditLimit) %>
+      <% } %>
+    </div>
+  </div>
+  <div class="stat <%= stock.hasShortage ? 'stat-danger' : 'stat-success' %>">
+    <div class="stat-label">Stock check</div>
+    <div class="stat-value stat-value-sm"><%= stock.hasShortage ? 'Shortage' : 'Available' %></div>
+    <div class="stat-meta"><%= stock.warehouseName || 'No default warehouse' %></div>
+  </div>
+</div>
+
+<div class="detail-grid detail-grid-wide">
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Order lines</div>
+          <div class="card-sub">Quantities and negotiated prices submitted by sales.</div>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="right">Ordered</th>
+              <th class="right">Remaining</th>
+              <th class="right">Unit price</th>
+              <th class="right">Line total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% lines.forEach(function (line) {
+                 const remaining = Math.max(0, line.quantity - line.cancelled_quantity - line.delivered_quantity);
+            %>
+              <tr>
+                <td>
+                  <div class="cell-primary"><%= line.product_name %></div>
+                  <div class="cell-sub cell-mono"><%= line.sku %> · <%= line.unit %></div>
+                  <% if (line.cancelled_quantity > 0) { %>
+                    <div class="cell-sub text-warning"><%= helpers.number(line.cancelled_quantity, 2) %> cancelled before approval</div>
+                  <% } %>
+                </td>
+                <td class="right money"><%= helpers.number(line.quantity, 2) %></td>
+                <td class="right money"><%= helpers.number(remaining, 2) %></td>
+                <td class="right money"><%= helpers.rupiah(line.unit_price) %></td>
+                <td class="right money"><%= helpers.rupiah(line.line_total) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" class="right fw-600">Submitted total</td>
+              <td class="right money fw-600"><%= helpers.rupiah(order.total) %></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Stock availability</div>
+          <div class="card-sub">Reservation uses the default warehouse: <%= stock.warehouseName || 'not configured' %>.</div>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="right">Requested</th>
+              <th class="right">On hand</th>
+              <th class="right">Reserved</th>
+              <th class="right">Available</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% stock.items.forEach(function (item) { %>
+              <tr>
+                <td>
+                  <div class="cell-primary"><%= item.productName %></div>
+                  <div class="cell-sub cell-mono"><%= item.sku %></div>
+                </td>
+                <td class="right money"><%= helpers.number(item.requested, 2) %> <%= item.unit %></td>
+                <td class="right money"><%= helpers.number(item.onHand, 2) %></td>
+                <td class="right money"><%= helpers.number(item.reserved, 2) %></td>
+                <td class="right money"><%= helpers.number(item.available, 2) %></td>
+                <td>
+                  <span class="badge badge-<%= item.ok ? 'success' : 'danger' %>"><%= item.ok ? 'Available' : 'Shortage' %></span>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Order history</div>
+          <div class="card-sub">Submission and approval events recorded so far.</div>
+        </div>
+      </div>
+      <% if (!approvals.length) { %>
+        <div class="empty">
+          <div class="empty-text">No history entries yet.</div>
+        </div>
+      <% } else { %>
+        <div class="card-body">
+          <div class="timeline">
+            <% approvals.forEach(function (entry) { %>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-title">
+                  <%= entry.action.replace('_', ' ').replace(/^./, function (c) { return c.toUpperCase(); }) %>
+                  <% if (entry.is_override) { %><span class="badge badge-warning">Credit override</span><% } %>
+                </div>
+                <div class="timeline-meta"><%= entry.acted_by_name || 'System' %> · <%= helpers.datetime(entry.acted_at) %></div>
+                <% if (entry.reason) { %>
+                  <div class="timeline-text"><%= entry.reason %></div>
+                <% } %>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Credit exposure</div>
+          <div class="card-sub">Recomputed from current invoices and open orders.</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="meta-list">
+          <div class="meta-row"><span class="meta-label">Credit limit</span><span class="meta-value"><%= credit.hasLimit ? helpers.rupiah(credit.creditLimit) : 'No limit' %></span></div>
+          <div class="meta-row"><span class="meta-label">Outstanding invoices</span><span class="meta-value money"><%= helpers.rupiah(credit.outstanding) %></span></div>
+          <div class="meta-row"><span class="meta-label">Approved, uninvoiced</span><span class="meta-value money"><%= helpers.rupiah(credit.openOrders) %></span></div>
+          <div class="meta-row"><span class="meta-label">Existing exposure</span><span class="meta-value money"><%= helpers.rupiah(credit.existingExposure) %></span></div>
+          <div class="meta-row"><span class="meta-label">This order</span><span class="meta-value money"><%= helpers.rupiah(credit.currentOrder) %></span></div>
+          <div class="divider"></div>
+          <div class="meta-row"><span class="meta-label fw-600">Projected exposure</span><span class="meta-value money fw-600"><%= helpers.rupiah(credit.projectedExposure) %></span></div>
+        </div>
+
+        <% if (!credit.hasLimit) { %>
+          <div class="alert alert-info mt-2" role="status">
+            <svg class="icon"><use href="#i-alert"></use></svg>
+            <div class="alert-body"><p>This customer has no credit limit. The warning check does not apply.</p></div>
+          </div>
+        <% } else if (credit.exceeds) { %>
+          <div class="alert alert-warning mt-2" role="status">
+            <svg class="icon"><use href="#i-alert"></use></svg>
+            <div class="alert-body">
+              <p>The order exceeds the credit limit by <strong><%= helpers.rupiah(credit.excess) %></strong>.</p>
+              <p>Approval requires an override justification.</p>
+            </div>
+          </div>
+        <% } else { %>
+          <div class="alert alert-success mt-2" role="status">
+            <svg class="icon"><use href="#i-check"></use></svg>
+            <div class="alert-body"><p>Projected exposure stays within the customer credit limit.</p></div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Customer</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="meta-list">
+          <div class="meta-row meta-row-block">
+            <span class="meta-label">Name</span>
+            <span class="meta-value"><a class="link" href="/customers/<%= order.customer_id %>"><%= order.customer_name %></a></span>
+          </div>
+          <div class="meta-row"><span class="meta-label">Code</span><span class="meta-value cell-mono"><%= order.customer_code %></span></div>
+          <div class="meta-row"><span class="meta-label">Payment terms</span><span class="meta-value"><%= order.payment_terms_days %> days</span></div>
+          <div class="meta-row"><span class="meta-label">Customer status</span><span class="meta-value"><span class="badge badge-<%= badge(order.customer_status) %>"><%= order.customer_status === 'active' ? 'Active' : 'Inactive' %></span></span></div>
+          <div class="meta-row"><span class="meta-label">Created by</span><span class="meta-value"><%= order.created_by_name || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Order date</span><span class="meta-value"><%= helpers.date(order.order_date) %></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Approve and reserve</div>
+          <div class="card-sub">Approval reserves the remaining quantities in <%= stock.warehouseName || 'the default warehouse' %>.</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <form method="post" action="/approvals/<%= order.id %>/approve"
+              data-confirm="Approve this order and reserve stock?">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+          <% if (credit.exceeds) { %>
+            <div class="field">
+              <label for="overrideReason">Credit override justification <span class="req">*</span></label>
+              <textarea class="textarea" id="overrideReason" name="overrideReason" maxlength="500"
+                        placeholder="Explain why this order may proceed beyond the credit limit"></textarea>
+              <div class="help">Recorded in the approval history and audit trail.</div>
+            </div>
+          <% } else { %>
+            <p class="help">No credit override is required for this order.</p>
+          <% } %>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit" <%= canApprove ? '' : 'disabled' %>>
+              <svg class="icon"><use href="#i-check"></use></svg>
+              Approve and reserve stock
+            </button>
+          </div>
+          <% if (isOwnOrder) { %>
+            <p class="help">You cannot approve an order you created.</p>
+          <% } else if (stock.hasShortage) { %>
+            <p class="help">Resolve the stock shortage before approving.</p>
+          <% } %>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Reject order</div>
+          <div class="card-sub">Rejection requires a reason and reserves no stock.</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <form method="post" action="/approvals/<%= order.id %>/reject"
+              data-confirm="Reject this order?">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="field">
+            <label for="reason">Rejection reason <span class="req">*</span></label>
+            <textarea class="textarea" id="reason" name="reason" maxlength="300" required
+                      placeholder="e.g. Credit terms not agreed with the customer"></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-danger" type="submit" <%= isOwnOrder ? 'disabled' : '' %>>
+              <svg class="icon"><use href="#i-close"></use></svg>
+              Reject order
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

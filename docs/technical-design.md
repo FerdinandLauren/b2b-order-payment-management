@@ -572,8 +572,8 @@ products ──< stock_movements
 
 1. **Create order (draft):** Sales Staff selects an active customer and adds lines (active products, qty > 0). The system calculates line totals and order total.
 2. **Submit:** status `draft → submitted`. The system validates the customer is active, products are active, quantities > 0, and calculates credit exposure.
-3. **Credit check:** exposure = outstanding issued invoice balances + approved orders not yet invoiced + the current order under approval. The system calculates and displays a warning when the supervisor reviews the order (no block). The check is recomputed at approval time so it always reflects current data. The warning shows: credit limit, existing exposure, current order value, projected exposure, and excess amount.
-4. **Approve:** Supervisor reviews. If a credit warning exists, the supervisor must provide an override justification. Status `submitted → approved`. The system reserves stock (`on_hand - reserved >= qty`). If stock is insufficient, approval is rejected with a reason. Audit log records the action and override.
+3. **Credit check:** exposure is calculated line by line (see 6.2) and displayed when the supervisor reviews the order (warning only, never an automatic block). It is recomputed at approval time so it reflects the latest invoices, orders, and cancellations. The warning shows the credit limit, outstanding invoices, open order value, existing exposure, current order value, projected exposure, and excess amount.
+4. **Approve:** Supervisor reviews the order in the approval queue. If projected exposure exceeds a positive credit limit, an override justification of at least 3 characters is required. Status `submitted → approved`. The system reserves stock in the default warehouse (`on_hand - reserved >= remaining qty`) and records a `reservation` movement per line. If stock is insufficient, approval is blocked with an explanatory error and the order stays `submitted` (the supervisor can still reject it). Approval history and audit log record the action, warehouse, reserved lines, and any credit override. The stock check is repeated inside the transaction so two supervisors cannot over-reserve the same stock.
 5. **Reject:** status `submitted → rejected`, reason required. No reservation.
 6. **Cancel:** eligible orders (`draft`, `submitted`, `approved`, `partially_fulfilled`, `partially_cancelled`) → `cancelled` (nothing delivered and all remaining cancelled), `fulfilled` (delivered > 0 and nothing remains), or `partially_cancelled` (delivered > 0 and remaining quantity still open), reason required. A draft order always cancels in full because it has not entered fulfillment and cannot be edited after partial cancellation. Releases reservation for the cancelled (undelivered) quantities only. Delivered quantities remain unchanged and invoicable.
 7. **Delivery:** Warehouse creates a delivery from an approved order, with quantities ≤ remaining order quantity. Dispatch → stock decrement (`on_hand -= qty`, `reserved -= qty`), status `dispatched`. Confirm → `delivered`. Order status → `partially_fulfilled` / `fulfilled`.
@@ -584,7 +584,7 @@ products ──< stock_movements
 ### 6.2 Credit Exposure Calculation
 
 ```text
-exposure = outstanding_invoiced + approved_not_invoiced + current_order
+exposure = outstanding_invoiced + open_order_value + current_order
 
 outstanding_invoiced =
     SUM(invoice.total - SUM(allocation.amount))
@@ -592,23 +592,31 @@ outstanding_invoiced =
     WHERE status IN ('issued', 'partially_paid')
       AND balance > 0
 
-approved_not_invoiced =
-    SUM(order.total FOR orders OF customer
-        WHERE status IN ('approved', 'partially_fulfilled', 'fulfilled'))
-    - SUM(invoice.total FOR invoices LINKED TO those orders
-          WHERE status != 'void')
+open_order_value =
+    SUM(open_value FOR orders OF customer
+        WHERE status IN ('approved', 'partially_fulfilled',
+                         'partially_cancelled', 'fulfilled'))
+
+open_value (per order) =
+    SUM((line.quantity - line.cancelled_quantity) * line.unit_price)
+    - SUM(invoice_line.line_total FOR non-void invoices
+          LINKED TO that order line)
 
 current_order =
-    order.total FOR the order currently under approval
-    (0 when the check is not tied to a specific order)
+    SUM((line.quantity - line.cancelled_quantity - line.delivered_quantity)
+        * line.unit_price)
+    FOR the order currently under approval
 ```
 
 **Rules:**
 
-- The current order's value is included in the exposure check while it is under approval.
-- When the order is approved, it moves into `approved_not_invoiced`; it is not counted twice.
-- Partially invoiced orders contribute only their remaining uninvoiced value, so exposure never duplicates invoice balances.
-- The calculation is performed inside a transaction to avoid double-counting and race conditions.
+- Exposure is calculated at the line level so partial deliveries, partial cancellations, and partial invoicing are handled without double counting.
+- Cancelled quantities are excluded from the order value; delivered quantities remain part of the order value until they are invoiced.
+- Non-void invoice lines reduce the order's open value. Voided invoices do not reduce exposure, because they no longer represent a receivable.
+- The current order is counted fully (minus cancellations) while it is under approval. Once approved it moves into `open_order_value`; it is not counted twice because the order being approved is excluded from the existing-order query.
+- A credit limit of `0` means the customer has no limit and the warning check does not apply.
+- The over-limit condition is `credit_limit > 0 AND projected_exposure > credit_limit`.
+- The calculation is performed inside the approval transaction to avoid double counting and race conditions.
 
 **Warning display:** credit limit, existing exposure, current order value, projected exposure, and excess amount.
 
@@ -618,9 +626,9 @@ current_order =
 available = on_hand - reserved
 ```
 
-- **Reservation (on approval):** `reserved += qty`
+- **Reservation (on approval):** `reserved += remaining_qty` per line, plus one `reservation` stock movement per product (`reference_type = 'sales_order'`).
 - **Dispatch:** `on_hand -= qty`, `reserved -= qty`
-- **Cancellation:** `reserved -= remaining_reserved`
+- **Cancellation:** `reserved -= remaining_reserved`, plus a `reservation_release` movement; skipped when the order was never approved.
 
 **Per-order-line reserved quantity** is computed as `order_line.quantity - cancelled_quantity - Σ delivery_lines.quantity` for that line. No separate per-line reservation column is required. Partially cancelled lines keep their delivered quantities invoicable while the cancelled quantity is excluded from fulfillment and reservation.
 
@@ -669,6 +677,7 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 - Cancellation of delivered or invoiced quantities is prevented.
 - A cancellation reason is required and recorded in the audit trail.
 - Order status becomes `cancelled` (nothing delivered and all remaining quantity cancelled), `fulfilled` (delivered > 0 and nothing remains), or `partially_cancelled` (delivered > 0 but remaining quantity is still open).
+- A partially cancelled `submitted` order keeps status `submitted`, so the remaining quantity stays in the approval queue. `partially_cancelled` only applies once the order is approved and reservation is active.
 - Sales Staff can cancel only their own draft orders; Sales Supervisor can cancel any eligible order.
 - Credit exposure is recalculated after cancellation.
 
@@ -827,6 +836,7 @@ POST   /orders/:id/submit
 POST   /orders/:id/cancel
 
 GET    /approvals
+GET    /approvals/:id
 POST   /approvals/:id/approve
 POST   /approvals/:id/reject
 
