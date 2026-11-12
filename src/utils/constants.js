@@ -62,7 +62,13 @@ const MOVEMENT_TYPE = {
 const UNITS = ['pcs', 'box', 'kg', 'ltr', 'unit', 'bag', 'roll', 'set'];
 
 const OPEN_ORDER_STATUSES = ['approved', 'partially_fulfilled'];
-const CANCELLABLE_ORDER_STATUSES = ['draft', 'submitted', 'approved', 'partially_fulfilled'];
+const CANCELLABLE_ORDER_STATUSES = [
+  'draft',
+  'submitted',
+  'approved',
+  'partially_fulfilled',
+  'partially_cancelled',
+];
 
 const STATUS_BADGE = {
   draft: 'neutral',

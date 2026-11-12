@@ -1115,3 +1115,41 @@
     border-right: 0;
   }
 }
+
+/* Order line editor */
+.table-lines td {
+  vertical-align: top;
+}
+
+.table-lines .line-product-cell {
+  min-width: 240px;
+}
+
+.table-lines .line-qty-col,
+.table-lines .line-price-col {
+  width: 150px;
+}
+
+.table-lines .line-quantity,
+.table-lines .line-price {
+  text-align: right;
+  max-width: 150px;
+  margin-left: auto;
+}
+
+.line-meta {
+  min-height: 15px;
+  margin-top: 4px;
+}
+
+.table-lines .line-remove {
+  color: var(--muted);
+}
+
+.table-lines .line-remove:hover {
+  color: var(--danger);
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}

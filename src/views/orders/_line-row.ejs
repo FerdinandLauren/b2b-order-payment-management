@@ -1,0 +1,27 @@
+<tr class="line-row">
+  <td class="line-product-cell">
+    <select class="select input-sm line-product" name="productId" aria-label="Product">
+      <option value="">Select a product</option>
+      <% products.forEach(function (product) { %>
+        <option value="<%= product.id %>" <%= String(item.productId) === String(product.id) ? 'selected' : '' %>>
+          <%= product.name %> · <%= product.sku %><%= product.status !== 'active' ? ' (inactive)' : '' %>
+        </option>
+      <% }); %>
+    </select>
+    <div class="line-meta text-xs text-muted"></div>
+  </td>
+  <td>
+    <input class="input input-sm right line-quantity" name="quantity" type="number" min="0.01" step="0.01"
+           value="<%= item.quantity %>" aria-label="Quantity" placeholder="0">
+  </td>
+  <td>
+    <input class="input input-sm right line-price" name="unitPrice" type="number" min="0" step="100"
+           value="<%= item.unitPrice %>" aria-label="Unit price" placeholder="0">
+  </td>
+  <td class="right money line-total">Rp 0</td>
+  <td class="right">
+    <button class="btn btn-ghost btn-sm line-remove" type="button" aria-label="Remove line">
+      <svg class="icon icon-sm"><use href="#i-close"></use></svg>
+    </button>
+  </td>
+</tr>

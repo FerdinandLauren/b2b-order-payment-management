@@ -30,6 +30,12 @@ function errorHandler(err, req, res, next) {
   if (err.isOperational) {
     if (req.method === 'POST') {
       setFlash(req, 'danger', err.message);
+      if (req.session && req.body) {
+        const oldInput = { ...req.body };
+        delete oldInput._csrf;
+        delete oldInput.password;
+        req.session.oldInput = oldInput;
+      }
       return res.redirect(safeBack(req));
     }
     return res.status(err.statusCode || 400).render('errors/error', {

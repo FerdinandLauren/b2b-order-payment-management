@@ -1,0 +1,184 @@
+<%- include('../partials/head') %>
+
+<%
+  const previousIds = old.productId === undefined
+    ? []
+    : (Array.isArray(old.productId) ? old.productId : [old.productId]);
+  const previousQuantities = old.quantity === undefined
+    ? []
+    : (Array.isArray(old.quantity) ? old.quantity : [old.quantity]);
+  const previousPrices = old.unitPrice === undefined
+    ? []
+    : (Array.isArray(old.unitPrice) ? old.unitPrice : [old.unitPrice]);
+
+  let items = initialItems;
+  if (previousIds.length) {
+    items = previousIds.map(function (productId, index) {
+      return {
+        productId: String(productId),
+        quantity: previousQuantities[index] === undefined ? '' : String(previousQuantities[index]),
+        unitPrice: previousPrices[index] === undefined ? '' : String(previousPrices[index]),
+      };
+    });
+  }
+  if (!items.length) {
+    items = [{ productId: '', quantity: '', unitPrice: '' }];
+  }
+
+  const selectedCustomer = old.customerId || (order ? order.customer_id : '');
+  const selectedDate = old.orderDate || orderDate;
+  const selectedNotes = old.notes || (order ? order.notes : '') || '';
+  const blankItem = { productId: '', quantity: '', unitPrice: '' };
+%>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Sales · Order-to-Cash</div>
+    <h1 class="page-title"><%= mode === 'create' ? 'New sales order' : 'Edit ' + order.order_number %></h1>
+    <p class="page-sub">
+      <%= mode === 'create'
+        ? 'Capture the customer order. It is saved as a draft until you submit it for approval.'
+        : 'Update the draft order. Submitting locks the lines and starts the approval workflow.' %>
+    </p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="<%= order ? '/orders/' + order.id : '/orders' %>">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Back
+    </a>
+  </div>
+</div>
+
+<form method="post" action="<%= mode === 'create' ? '/orders' : '/orders/' + order.id %>" data-order-form>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <div class="detail-grid detail-grid-wide">
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Order information</div>
+            <div class="card-sub">The order number is generated automatically on save.</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field field-full">
+              <label for="customerId">Customer <span class="req">*</span></label>
+              <select class="select" id="customerId" name="customerId" required>
+                <option value="">Select an active customer</option>
+                <% customers.forEach(function (customer) { %>
+                  <option value="<%= customer.id %>" <%= String(selectedCustomer) === String(customer.id) ? 'selected' : '' %>>
+                    <%= customer.name %> · <%= customer.code %>
+                  </option>
+                <% }); %>
+              </select>
+              <div class="help">Only active customers can be ordered from.</div>
+            </div>
+
+            <div class="field">
+              <label for="orderDate">Order date <span class="req">*</span></label>
+              <input class="input" id="orderDate" name="orderDate" type="date" required value="<%= selectedDate %>">
+            </div>
+
+            <div class="field">
+              <label for="notes">Notes</label>
+              <input class="input" id="notes" name="notes" type="text" maxlength="500"
+                     value="<%= selectedNotes %>" placeholder="Optional internal note">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Order lines</div>
+            <div class="card-sub">Add one line per product. Negotiated prices are allowed.</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" type="button" data-add-line>
+            <svg class="icon"><use href="#i-plus"></use></svg>
+            Add line
+          </button>
+        </div>
+
+        <div class="table-scroll">
+          <table class="table table-lines">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th class="right line-qty-col">Quantity</th>
+                <th class="right line-price-col">Unit price (IDR)</th>
+                <th class="right">Line total</th>
+                <th class="right"></th>
+              </tr>
+            </thead>
+            <tbody data-line-body>
+              <% items.forEach(function (item) { %>
+                <%- include('_line-row', { item: item, products: products }) %>
+              <% }); %>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4" class="right fw-600">Order total</td>
+                <td class="right money fw-600" data-order-total>Rp 0</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="card-body card-body-tight">
+          <p class="help mb-0">Blank lines are ignored. Stock is checked and reserved once a supervisor approves the order.</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Summary</div>
+            <div class="card-sub">Tax is outside the MVP scope.</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="meta-list">
+            <div class="meta-row"><span class="meta-label">Lines</span><span class="meta-value" data-summary-lines>0</span></div>
+            <div class="meta-row"><span class="meta-label">Units</span><span class="meta-value" data-summary-units>0</span></div>
+            <div class="divider"></div>
+            <div class="meta-row"><span class="meta-label">Subtotal</span><span class="meta-value" data-summary-subtotal>Rp 0</span></div>
+            <div class="meta-row"><span class="meta-label">Tax</span><span class="meta-value">Not applied</span></div>
+            <div class="meta-row"><span class="meta-label fw-600">Total</span><span class="meta-value fw-600" data-summary-total>Rp 0</span></div>
+          </div>
+
+          <div class="form-actions">
+            <a class="btn btn-ghost" href="<%= order ? '/orders/' + order.id : '/orders' %>">Cancel</a>
+            <button class="btn btn-primary" type="submit">
+              <%= mode === 'create' ? 'Save draft' : 'Save changes' %>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<template id="line-row-template">
+  <%- include('_line-row', { item: blankItem, products: products }) %>
+</template>
+
+<script type="application/json" id="order-data">
+  <%- JSON.stringify({
+    products: products.map(function (product) {
+      return {
+        id: String(product.id),
+        unitPrice: Number(product.unit_price) || 0,
+        unit: product.unit,
+        available: Number(product.on_hand || 0) - Number(product.reserved || 0),
+      };
+    })
+  }).replace(/</g, '\\u003c') %>
+</script>
+<script src="/js/orders.js"></script>
+
+<%- include('../partials/foot') %>

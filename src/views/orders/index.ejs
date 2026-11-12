@@ -1,0 +1,117 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Sales · Order-to-Cash</div>
+    <h1 class="page-title">Sales orders</h1>
+    <p class="page-sub">Capture customer orders, submit them for approval, and follow their progress through delivery and billing.</p>
+  </div>
+  <% if (currentUser.role === 'sales_staff' || currentUser.role === 'sales_supervisor') { %>
+    <div class="page-actions">
+      <a class="btn btn-primary" href="/orders/new">
+        <svg class="icon"><use href="#i-plus"></use></svg>
+        New order
+      </a>
+    </div>
+  <% } %>
+</div>
+
+<form class="filter-bar" method="get" action="/orders">
+  <div class="field">
+    <label for="q">Search</label>
+    <input class="input input-sm" id="q" name="q" type="text" value="<%= filters.q %>" placeholder="Order number or customer">
+  </div>
+  <div class="field">
+    <label for="status">Status</label>
+    <select class="select input-sm" id="status" name="status">
+      <option value="">All statuses</option>
+      <% statuses.forEach(function (status) { %>
+        <option value="<%= status %>" <%= filters.status === status ? 'selected' : '' %>><%= enums.ORDER_STATUS[status] %></option>
+      <% }); %>
+    </select>
+  </div>
+  <div class="field">
+    <label for="customerId">Customer</label>
+    <select class="select input-sm" id="customerId" name="customerId">
+      <option value="">All customers</option>
+      <% customers.forEach(function (customer) { %>
+        <option value="<%= customer.id %>" <%= String(filters.customerId) === String(customer.id) ? 'selected' : '' %>><%= customer.name %></option>
+      <% }); %>
+    </select>
+  </div>
+  <button class="btn btn-secondary btn-sm" type="submit">
+    <svg class="icon"><use href="#i-search"></use></svg>
+    Filter
+  </button>
+  <a class="btn btn-ghost btn-sm" href="/orders">Reset</a>
+  <div class="filter-spacer"></div>
+  <span class="text-xs text-muted"><%= orders.length %> order<%= orders.length === 1 ? '' : 's' %></span>
+</form>
+
+<% if (!orders.length) { %>
+  <div class="table-wrap">
+    <div class="empty">
+      <div class="empty-icon"><svg class="icon"><use href="#i-orders"></use></svg></div>
+      <div class="empty-title">No sales orders found</div>
+      <div class="empty-text">
+        <% if (currentUser.role === 'sales_staff' || currentUser.role === 'sales_supervisor') { %>
+          Create the first order or adjust the filters.
+        <% } else { %>
+          Adjust the filters to find orders.
+        <% } %>
+      </div>
+      <% if (currentUser.role === 'sales_staff' || currentUser.role === 'sales_supervisor') { %>
+        <a class="btn btn-primary" href="/orders/new">New order</a>
+      <% } %>
+    </div>
+  </div>
+<% } else { %>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Order date</th>
+            <th class="right">Lines</th>
+            <th class="right">Total</th>
+            <th>Status</th>
+            <th>Created by</th>
+            <th class="right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orders.forEach(function (order) { %>
+            <tr>
+              <td><a class="link" href="/orders/<%= order.id %>"><%= order.order_number %></a></td>
+              <td>
+                <div class="cell-primary"><%= order.customer_name %></div>
+                <div class="cell-sub cell-mono"><%= order.customer_code %></div>
+              </td>
+              <td class="text-sm text-muted"><%= helpers.date(order.order_date) %></td>
+              <td class="right money"><%= order.line_count %></td>
+              <td class="right money"><%= helpers.rupiah(order.total) %></td>
+              <td><span class="badge badge-<%= badge(order.status) %>"><%= enums.ORDER_STATUS[order.status] || order.status %></span></td>
+              <td class="text-sm text-muted"><%= order.created_by_name || '—' %></td>
+              <td>
+                <div class="table-actions">
+                  <a class="btn btn-ghost btn-sm" href="/orders/<%= order.id %>">View</a>
+                  <% if (order.status === 'draft' && (currentUser.role === 'sales_supervisor' || (currentUser.role === 'sales_staff' && order.created_by === currentUser.id))) { %>
+                    <a class="btn btn-ghost btn-sm" href="/orders/<%= order.id %>/edit">Edit</a>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-foot">
+      <span><%= orders.length %> order<%= orders.length === 1 ? '' : 's' %></span>
+      <span>Order totals are stored in IDR</span>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../partials/foot') %>

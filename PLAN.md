@@ -179,18 +179,18 @@ Users can maintain master data and monitor inventory accurately.
 **Objective:** Implement order creation and submission.
 
 Tasks:
-- [ ] Create sales order list.
-- [ ] Create sales order details page.
-- [ ] Create order creation form.
-- [ ] Support multiple order lines.
-- [ ] Implement product selection.
-- [ ] Implement quantity validation.
-- [ ] Implement order total calculation.
-- [ ] Implement draft editing.
-- [ ] Implement order submission.
-- [ ] Implement order status management.
-- [ ] Implement order history.
-- [ ] Add automated tests.
+- [x] Create sales order list.
+- [x] Create sales order details page.
+- [x] Create order creation form.
+- [x] Support multiple order lines.
+- [x] Implement product selection.
+- [x] Implement quantity validation.
+- [x] Implement order total calculation.
+- [x] Implement draft editing.
+- [x] Implement order submission.
+- [x] Implement order status management.
+- [x] Implement order history.
+- [x] Add automated tests.
 
 Expected Deliverables:
 - Sales order module.
@@ -201,6 +201,8 @@ Expected Deliverables:
 Exit Criteria:
 
 Sales Staff can create and submit valid orders.
+
+**Status:** Completed. Sales orders support draft creation, multi-line editing, submission, role-based visibility, full and partial cancellation with mandatory reasons, and order history. Manual cancellation rights follow the Sales Staff (own draft only) / Sales Supervisor (eligible orders) model.
 
 ### Milestone 6 — Order Approval and Inventory Reservation
 
@@ -216,7 +218,7 @@ Tasks:
 - [ ] Implement customer credit exposure validation.
 - [ ] Implement stock reservation.
 - [ ] Implement reservation release.
-- [ ] Implement partial order cancellation.
+- [x] Implement partial order cancellation. *(Delivered in M5 for submitted/approved orders.)*
 - [ ] Implement approval history.
 - [ ] Implement audit events.
 - [ ] Test concurrent reservation scenarios.
@@ -408,7 +410,7 @@ A reviewer can understand the business problem, run the application, and follow 
 | M2 — System Design and Architecture | Completed | DESIGN.md + `docs/technical-design.md` |
 | M3 — Application Foundation and Authentication | Completed | Login, RBAC, user management, shared layout; auth tests passing |
 | M4 — Master Data and Inventory Management | Completed | Customers, products, categories, warehouses, inventory, movements, adjustments; 19 tests passing |
-| M5 — Sales Order Management | Not Started | |
+| M5 — Sales Order Management | Completed | Order list, detail, create/edit, submit, cancel, history; 33 tests passing |
 | M6 — Order Approval and Inventory Reservation | Not Started | |
 | M7 — Delivery and Fulfillment Management | Not Started | |
 | M8 — Invoice and Accounts Receivable Management | Not Started | |
@@ -554,3 +556,4 @@ The project is complete when the MVP workflow is functional, critical acceptance
 | 1.0 | 2026-11-12 | Initial project plan. |
 | 1.1 | 2026-11-12 | Technology stack selected; progress tracking added; demo scenario updated for per-delivery invoicing. |
 | 1.2 | 2026-11-12 | Credit exposure includes the current order; partial order cancellation added to Milestone 6. |
+| 1.3 | 2026-11-12 | Milestone 5 completed; partial cancellation and draft full-cancel rules delivered with order management. |

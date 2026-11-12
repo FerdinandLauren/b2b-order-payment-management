@@ -1,0 +1,301 @@
+<%- include('../partials/head') %>
+
+<%
+  const isSales = currentUser.role === 'sales_staff' || currentUser.role === 'sales_supervisor';
+  const ownsOrder = order.created_by === currentUser.id;
+  const canEdit = order.status === 'draft' && isSales && (currentUser.role === 'sales_supervisor' || ownsOrder);
+  const canSubmit = order.status === 'draft' && isSales && (currentUser.role === 'sales_supervisor' || ownsOrder);
+  const totalQuantity = lines.reduce(function (sum, line) { return sum + line.quantity; }, 0);
+  const cancelledTotal = lines.reduce(function (sum, line) { return sum + line.cancelled_quantity; }, 0);
+  const deliveredTotal = lines.reduce(function (sum, line) { return sum + line.delivered_quantity; }, 0);
+%>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Sales · Sales order</div>
+    <h1 class="page-title"><%= order.order_number %></h1>
+    <p class="page-sub">
+      <span class="badge badge-<%= badge(order.status) %>"><%= enums.ORDER_STATUS[order.status] %></span>
+      · <%= order.customer_name %> · <%= helpers.date(order.order_date) %>
+    </p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/orders">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Back
+    </a>
+    <% if (canEdit) { %>
+      <a class="btn btn-secondary" href="/orders/<%= order.id %>/edit">
+        <svg class="icon"><use href="#i-edit"></use></svg>
+        Edit draft
+      </a>
+    <% } %>
+    <% if (canSubmit) { %>
+      <form method="post" action="/orders/<%= order.id %>/submit" data-confirm="Submit this order for approval? Stock will be reserved only after approval.">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn-primary" type="submit">Submit for approval</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Order total</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(order.total) %></div>
+    <div class="stat-meta">Subtotal <%= helpers.rupiah(order.subtotal) %></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Lines</div>
+    <div class="stat-value"><%= lines.length %></div>
+    <div class="stat-meta"><%= helpers.number(totalQuantity, 2) %> units ordered</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Delivered</div>
+    <div class="stat-value"><%= helpers.number(deliveredTotal, 2) %></div>
+    <div class="stat-meta">Quantities confirmed by warehouse</div>
+  </div>
+  <div class="stat <%= cancelledTotal > 0 ? 'stat-warning' : '' %>">
+    <div class="stat-label">Cancelled</div>
+    <div class="stat-value"><%= helpers.number(cancelledTotal, 2) %></div>
+    <div class="stat-meta">Quantities removed from fulfillment</div>
+  </div>
+</div>
+
+<div class="detail-grid detail-grid-wide">
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Order lines</div>
+          <div class="card-sub">Negotiated prices are stored per line at order time.</div>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="right">Ordered</th>
+              <th class="right">Delivered</th>
+              <th class="right">Cancelled</th>
+              <th class="right">Unit price</th>
+              <th class="right">Line total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% lines.forEach(function (line) { %>
+              <tr>
+                <td>
+                  <div class="cell-primary"><%= line.product_name %></div>
+                  <div class="cell-sub cell-mono"><%= line.sku %> · <%= line.unit %></div>
+                  <% if (line.cancellation_reason) { %>
+                    <div class="cell-sub text-warning">Cancellation: <%= line.cancellation_reason %></div>
+                  <% } %>
+                </td>
+                <td class="right money"><%= helpers.number(line.quantity, 2) %></td>
+                <td class="right money"><%= helpers.number(line.delivered_quantity, 2) %></td>
+                <td class="right money"><%= helpers.number(line.cancelled_quantity, 2) %></td>
+                <td class="right money"><%= helpers.rupiah(line.unit_price) %></td>
+                <td class="right money"><%= helpers.rupiah(line.line_total) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" class="right fw-600">Total</td>
+              <td class="right money fw-600"><%= helpers.rupiah(order.total) %></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <% if (deliveries.length) { %>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Deliveries</div>
+            <div class="card-sub">Fulfillment records linked to this order.</div>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Delivery</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% deliveries.forEach(function (delivery) { %>
+                <tr>
+                  <td><a class="link" href="/deliveries/<%= delivery.id %>"><%= delivery.delivery_number %></a></td>
+                  <td class="text-sm text-muted"><%= helpers.date(delivery.delivery_date) %></td>
+                  <td><span class="badge badge-<%= badge(delivery.status) %>"><%= enums.DELIVERY_STATUS[delivery.status] || delivery.status %></span></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (invoices.length) { %>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Invoices</div>
+            <div class="card-sub">Billing documents generated from deliveries.</div>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Invoice</th>
+                <th>Due date</th>
+                <th>Status</th>
+                <th class="right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% invoices.forEach(function (invoice) { %>
+                <tr>
+                  <td><a class="link" href="/invoices/<%= invoice.id %>"><%= invoice.invoice_number %></a></td>
+                  <td class="text-sm text-muted"><%= helpers.date(invoice.due_date) %></td>
+                  <td><span class="badge badge-<%= badge(invoice.status) %>"><%= enums.INVOICE_STATUS[invoice.status] || invoice.status %></span></td>
+                  <td class="right money"><%= helpers.rupiah(invoice.total) %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Order history</div>
+          <div class="card-sub">Submission, approval, and cancellation events.</div>
+        </div>
+      </div>
+      <% if (!approvals.length) { %>
+        <div class="empty">
+          <div class="empty-text">No history entries yet. Submit the order to start the approval trail.</div>
+        </div>
+      <% } else { %>
+        <div class="card-body">
+          <div class="timeline">
+            <% approvals.forEach(function (entry) { %>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-title">
+                  <%= entry.action.replace('_', ' ').replace(/^./, function (c) { return c.toUpperCase(); }) %>
+                  <% if (entry.is_override) { %><span class="badge badge-warning">Credit override</span><% } %>
+                </div>
+                <div class="timeline-meta"><%= entry.acted_by_name || 'System' %> · <%= helpers.datetime(entry.acted_at) %></div>
+                <% if (entry.reason) { %>
+                  <div class="timeline-text"><%= entry.reason %></div>
+                <% } %>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Customer</div>
+      </div>
+      <div class="card-body">
+        <div class="meta-list">
+          <div class="meta-row meta-row-block">
+            <span class="meta-label">Name</span>
+            <span class="meta-value"><a class="link" href="/customers/<%= order.customer_id %>"><%= order.customer_name %></a></span>
+          </div>
+          <div class="meta-row"><span class="meta-label">Code</span><span class="meta-value cell-mono"><%= order.customer_code %></span></div>
+          <div class="meta-row"><span class="meta-label">City</span><span class="meta-value"><%= order.customer_city || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Payment terms</span><span class="meta-value"><%= order.payment_terms_days %> days</span></div>
+          <div class="meta-row"><span class="meta-label">Credit limit</span><span class="meta-value"><%= order.credit_limit > 0 ? helpers.rupiah(order.credit_limit) : 'No limit' %></span></div>
+          <div class="meta-row"><span class="meta-label">Customer status</span><span class="meta-value"><span class="badge badge-<%= badge(order.customer_status) %>"><%= order.customer_status === 'active' ? 'Active' : 'Inactive' %></span></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Order details</div>
+      </div>
+      <div class="card-body">
+        <div class="meta-list">
+          <div class="meta-row"><span class="meta-label">Order date</span><span class="meta-value"><%= helpers.date(order.order_date) %></span></div>
+          <div class="meta-row"><span class="meta-label">Created by</span><span class="meta-value"><%= order.created_by_name || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Created</span><span class="meta-value"><%= helpers.datetime(order.created_at) %></span></div>
+          <div class="meta-row"><span class="meta-label">Submitted</span><span class="meta-value"><%= order.submitted_at ? helpers.datetime(order.submitted_at) : '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Currency</span><span class="meta-value"><%= order.currency %></span></div>
+          <% if (order.notes) { %>
+            <div class="divider"></div>
+            <div class="meta-row meta-row-block"><span class="meta-label">Notes</span><span class="meta-value"><%= order.notes %></span></div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <% if (canCancel) { %>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Cancel order</div>
+            <div class="card-sub">
+              <%= order.status === 'draft'
+                ? 'Cancelling a draft cancels the entire order.'
+                : 'Cancel all or part of the remaining undelivered quantity.' %>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form method="post" action="/orders/<%= order.id %>/cancel"
+                data-confirm="Record this cancellation? Cancelled quantities cannot be restored.">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+            <% if (order.status === 'draft') { %>
+              <p class="help">This draft has not entered fulfillment. The whole order will be cancelled and cannot be restored.</p>
+            <% } else { %>
+              <div class="stack">
+                <% lines.forEach(function (line) {
+                     const remaining = Math.max(0, line.quantity - line.cancelled_quantity - line.delivered_quantity);
+                %>
+                  <% if (remaining > 0) { %>
+                    <div class="field">
+                      <label for="cancel_<%= line.id %>"><%= line.product_name %> <span class="text-muted">(remaining <%= helpers.number(remaining, 2) %>)</span></label>
+                      <input class="input input-sm" id="cancel_<%= line.id %>" name="cancel_<%= line.id %>"
+                             type="number" min="0" max="<%= remaining %>" step="0.01" value="<%= remaining %>">
+                    </div>
+                  <% } %>
+                <% }); %>
+              </div>
+            <% } %>
+
+            <div class="field mt-2">
+              <label for="reason">Cancellation reason <span class="req">*</span></label>
+              <textarea class="textarea" id="reason" name="reason" required maxlength="300"
+                        placeholder="e.g. Customer reduced the order scope"></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-danger btn-block" type="submit">Record cancellation</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

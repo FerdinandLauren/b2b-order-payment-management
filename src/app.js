@@ -37,24 +37,6 @@ function createApp() {
 
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(express.urlencoded({ extended: false }));
-  app.use(
-    session({
-      name: 'b2b.sid',
-      secret: env.sessionSecret,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: false,
-        maxAge: 8 * 60 * 60 * 1000,
-      },
-    })
-  );
-
-  app.use(flashMiddleware);
-  app.use(csrfMiddleware);
-  app.use(attachUser);
 
   app.use((req, res, next) => {
     res.locals.currentPath = req.path;
@@ -74,6 +56,25 @@ function createApp() {
         .join('');
     next();
   });
+
+  app.use(
+    session({
+      name: 'b2b.sid',
+      secret: env.sessionSecret,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: false,
+        maxAge: 8 * 60 * 60 * 1000,
+      },
+    })
+  );
+
+  app.use(flashMiddleware);
+  app.use(attachUser);
+  app.use(csrfMiddleware);
 
   app.use(routes);
   app.use(notFound);

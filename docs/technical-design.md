@@ -575,7 +575,7 @@ products ──< stock_movements
 3. **Credit check:** exposure = outstanding issued invoice balances + approved orders not yet invoiced + the current order under approval. The system calculates and displays a warning when the supervisor reviews the order (no block). The check is recomputed at approval time so it always reflects current data. The warning shows: credit limit, existing exposure, current order value, projected exposure, and excess amount.
 4. **Approve:** Supervisor reviews. If a credit warning exists, the supervisor must provide an override justification. Status `submitted → approved`. The system reserves stock (`on_hand - reserved >= qty`). If stock is insufficient, approval is rejected with a reason. Audit log records the action and override.
 5. **Reject:** status `submitted → rejected`, reason required. No reservation.
-6. **Cancel:** eligible orders (`draft`, `submitted`, `approved`, `partially_fulfilled`) → `cancelled` (no deliveries) or `partially_cancelled` (partial deliveries), reason required. Releases reservation for the cancelled (undelivered) quantities only. Delivered quantities remain unchanged and invoicable.
+6. **Cancel:** eligible orders (`draft`, `submitted`, `approved`, `partially_fulfilled`, `partially_cancelled`) → `cancelled` (nothing delivered and all remaining cancelled), `fulfilled` (delivered > 0 and nothing remains), or `partially_cancelled` (delivered > 0 and remaining quantity still open), reason required. A draft order always cancels in full because it has not entered fulfillment and cannot be edited after partial cancellation. Releases reservation for the cancelled (undelivered) quantities only. Delivered quantities remain unchanged and invoicable.
 7. **Delivery:** Warehouse creates a delivery from an approved order, with quantities ≤ remaining order quantity. Dispatch → stock decrement (`on_hand -= qty`, `reserved -= qty`), status `dispatched`. Confirm → `delivered`. Order status → `partially_fulfilled` / `fulfilled`.
 8. **Invoice:** Finance generates an invoice from a delivered delivery. One invoice per delivery. Quantities = delivered quantity. Status `draft → issued`. Due date = invoice date + customer payment terms.
 9. **Payment:** Finance records a payment (amount, method, reference). Payment is allocated to invoices of the same customer. Allocation ≤ unallocated payment amount and ≤ invoice outstanding balance. Invoice status updates.
@@ -646,12 +646,15 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 | From | To | Trigger | Rules |
 |---|---|---|---|
 | draft | submitted | submit | customer active, ≥1 line, qty > 0 |
+| draft | cancelled | cancel | reason required; always cancels the whole order |
 | submitted | approved | approve | stock available; credit warning → override + justification |
 | submitted | rejected | reject | reason required |
 | submitted | cancelled | cancel | reason required |
 | approved | cancelled | cancel | reason required; release full reservation |
 | approved | partially_cancelled | cancel remaining | reason required; release reservation for undelivered qty |
 | partially_fulfilled | partially_cancelled | cancel remaining | reason required; release reservation for undelivered qty |
+| partially_cancelled | partially_cancelled | cancel remaining | reason required; release reservation for undelivered qty |
+| partially_cancelled | fulfilled | cancel remaining | delivered > 0 and no remaining undelivered qty |
 | approved | partially_fulfilled | delivery confirmed | partial delivery confirmed |
 | partially_fulfilled | fulfilled | delivery confirmed | all quantities delivered |
 | approved | fulfilled | delivery confirmed | all quantities delivered at once |
@@ -660,11 +663,13 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 
 - Orders with no deliveries can be fully cancelled.
 - Orders with partial deliveries can only cancel their remaining undelivered quantities.
+- Draft orders always cancel in full, because a partially cancelled draft cannot be edited and would strand the remaining quantity.
 - Already delivered quantities remain unchanged and can still be invoiced.
 - Reservations are released only for the cancelled (undelivered) quantities.
 - Cancellation of delivered or invoiced quantities is prevented.
 - A cancellation reason is required and recorded in the audit trail.
-- Order status becomes `partially_cancelled` (partial deliveries) or `cancelled` (no deliveries).
+- Order status becomes `cancelled` (nothing delivered and all remaining quantity cancelled), `fulfilled` (delivered > 0 and nothing remains), or `partially_cancelled` (delivered > 0 but remaining quantity is still open).
+- Sales Staff can cancel only their own draft orders; Sales Supervisor can cancel any eligible order.
 - Credit exposure is recalculated after cancellation.
 
 **Delivery**
@@ -754,6 +759,7 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 | Inventory view | ✓ | ✓ | ✓ | – | ✓ | ✓ |
 | Stock adjustment | – | – | ✓ | – | – | ✓ |
 | Order create / edit draft | ✓ | ✓ | – | – | – | – |
+| Order list / view | ✓ | ✓ | fulfillment statuses only | ✓ | ✓ | ✓ |
 | Order submit | ✓ | ✓ | – | – | – | – |
 | Order cancel | own draft | ✓ | – | – | – | – |
 | Approval queue | – | ✓ | – | – | – | – |
@@ -767,6 +773,8 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 | User management | – | – | – | – | – | ✓ |
 | Audit view | – | – | – | – | ✓ | ✓ |
 | Management dashboard | – | – | – | – | ✓ | ✓ |
+
+**Warehouse visibility:** Warehouse Staff only see orders that have entered fulfillment (`approved`, `partially_fulfilled`, `partially_cancelled`, `fulfilled`). Draft, submitted, rejected and cancelled orders are hidden from both the order list and the detail page for that role.
 
 ### 7.3 Implementation
 
