@@ -1,0 +1,119 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Finance · Record payment</div>
+    <h1 class="page-title">Record customer payment</h1>
+    <p class="page-sub">Capture the receipt first. You can allocate it to one or more open invoices immediately after saving.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/payments">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Payments
+    </a>
+  </div>
+</div>
+
+<form method="post" action="/payments">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <div class="detail-grid">
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Payment details</div>
+            <div class="card-sub">The payment number is generated automatically on save.</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="field field-full">
+              <label for="customerId">Customer <span class="req">*</span></label>
+              <select class="select" id="customerId" name="customerId" required>
+                <option value="">Select a customer</option>
+                <% customers.forEach(function (customer) { %>
+                  <option value="<%= customer.id %>" <%= String(old.customerId || '') === String(customer.id) ? 'selected' : '' %>>
+                    <%= customer.code %> · <%= customer.name %><%= customer.status !== 'active' ? ' (inactive)' : '' %>
+                  </option>
+                <% }); %>
+              </select>
+              <div class="help">Payments can only be allocated to invoices of the same customer.</div>
+            </div>
+
+            <div class="field">
+              <label for="paymentDate">Payment date <span class="req">*</span></label>
+              <input class="input" id="paymentDate" name="paymentDate" type="date" required
+                     value="<%= old.paymentDate || paymentDate %>">
+            </div>
+
+            <div class="field">
+              <label for="amount">Amount (IDR) <span class="req">*</span></label>
+              <input class="input" id="amount" name="amount" type="number" min="0.01" step="0.01" required
+                     value="<%= old.amount || '' %>" placeholder="e.g. 15000000">
+              <div class="help">Amounts larger than the invoice balance remain unallocated.</div>
+            </div>
+
+            <div class="field">
+              <label for="method">Method <span class="req">*</span></label>
+              <select class="select" id="method" name="method" required>
+                <% methods.forEach(function (method) { %>
+                  <option value="<%= method %>" <%= (old.method || 'transfer') === method ? 'selected' : '' %>><%= enums.PAYMENT_METHOD[method] %></option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="reference">Reference</label>
+              <input class="input" id="reference" name="reference" type="text" maxlength="100"
+                     value="<%= old.reference || '' %>" placeholder="Bank transfer or cheque number">
+            </div>
+
+            <div class="field field-full">
+              <label for="notes">Notes</label>
+              <textarea class="textarea" id="notes" name="notes" rows="3" maxlength="500"
+                        placeholder="Optional internal note"><%= old.notes || '' %></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <a class="btn btn-ghost" href="/payments">Cancel</a>
+            <button class="btn btn-primary" type="submit">Record payment</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Customer receivables</div>
+            <div class="card-sub">Outstanding issued invoices per customer.</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="meta-list">
+            <% customers.filter(function (customer) { return customer.outstanding > 0; }).forEach(function (customer) { %>
+              <div class="meta-row">
+                <span class="meta-label"><%= customer.name %></span>
+                <span class="meta-value"><%= helpers.rupiah(customer.outstanding) %></span>
+              </div>
+            <% }); %>
+            <% if (!customers.some(function (customer) { return customer.outstanding > 0; })) { %>
+              <div class="empty">
+                <div class="empty-text">No customer has an outstanding invoice yet.</div>
+              </div>
+            <% } %>
+          </div>
+          <div class="alert alert-info mt-2" role="status">
+            <svg class="icon"><use href="#i-alert"></use></svg>
+            <div class="alert-body"><p>Recording a payment does not change any invoice until you allocate it.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<%- include('../partials/foot') %>

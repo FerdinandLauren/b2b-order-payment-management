@@ -295,18 +295,18 @@ Finance Staff can generate invoices from eligible deliveries and monitor receiva
 **Objective:** Implement customer payment recording and allocation.
 
 Tasks:
-- [ ] Create payment list.
-- [ ] Create payment entry form.
-- [ ] Implement payment recording.
-- [ ] Implement payment allocation interface.
-- [ ] Support multiple invoice allocations.
-- [ ] Support partial payments.
-- [ ] Calculate unallocated payment amounts.
-- [ ] Calculate outstanding invoice balances.
-- [ ] Prevent over-allocation.
-- [ ] Implement payment history.
-- [ ] Update invoice status after allocation.
-- [ ] Add automated tests.
+- [x] Create payment list.
+- [x] Create payment entry form.
+- [x] Implement payment recording.
+- [x] Implement payment allocation interface.
+- [x] Support multiple invoice allocations.
+- [x] Support partial payments.
+- [x] Calculate unallocated payment amounts.
+- [x] Calculate outstanding invoice balances.
+- [x] Prevent over-allocation.
+- [x] Implement payment history.
+- [x] Update invoice status after allocation.
+- [x] Add automated tests.
 
 Expected Deliverables:
 - Payment management module.
@@ -418,7 +418,7 @@ A reviewer can understand the business problem, run the application, and follow 
 | M6 - Order Approval and Inventory Reservation | Completed | Approval queue, credit/stock review, approve/reject, reservation; 43 tests passing |
 | M7 - Delivery and Fulfillment Management | Completed | Fulfillment queue, partial delivery, dispatch, confirmation, exceptions; 51 tests passing |
 | M8 - Invoice and Accounts Receivable Management | Completed | Invoice list/detail, generation from delivered shipments, draft issue, void/re-invoice, overdue tracking, receivables stats; 59 tests passing |
-| M9 — Payment Management | Not Started | |
+| M9 - Payment Management | Completed | Payment list/detail, recording, multi-invoice allocation, partial payments, unallocated tracking, over-allocation guards; 66 tests passing |
 | M10 — Dashboard and Reporting | Not Started | |
 | M11 — Testing and Quality Assurance | Not Started | |
 | M12 — Documentation and Portfolio Preparation | Not Started | |
@@ -564,3 +564,4 @@ The project is complete when the MVP workflow is functional, critical acceptance
 | 1.4 | 2026-11-12 | Milestone 6 completed; approval queue, line-level credit exposure, stock reservation, and self-approval guard delivered. |
 | 1.5 | 2026-11-12 | Milestone 7 completed; partial deliveries, dispatch, confirmation, delivery exceptions, and fulfillment status updates delivered. |
 | 1.6 | 2026-11-12 | Milestone 8 completed; per-delivery invoicing, draft issuance, void/re-invoice, overdue monitoring, and receivables stats delivered. |
+| 1.7 | 2026-11-12 | Milestone 9 completed; payment recording, multi-invoice allocation, partial payments, unallocated tracking, and over-allocation guards delivered. |

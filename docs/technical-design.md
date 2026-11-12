@@ -33,6 +33,7 @@ It covers:
 | Role model | 6 roles from PRD.md (authoritative) |
 | Credit limit | Warning + supervisor override with mandatory justification |
 | Invoicing | Per delivery; at most one active (non-void) invoice per delivery |
+| Payments | Multiple invoice allocations per payment; partial payments; unallocated amount retained; no reversal in MVP |
 | Tax | Outside MVP; schema kept extensible |
 | Scope | Full O2C + Management Dashboard + Audit Trail |
 
@@ -578,7 +579,7 @@ products ──< stock_movements
 6. **Cancel:** eligible orders (`draft`, `submitted`, `approved`, `partially_fulfilled`, `partially_cancelled`) → `cancelled` (nothing delivered and all remaining cancelled), `fulfilled` (delivered > 0 and nothing remains), or `partially_cancelled` (delivered > 0 and remaining quantity still open), reason required. A draft order always cancels in full because it has not entered fulfillment and cannot be edited after partial cancellation. Releases reservation for the cancelled (undelivered) quantities only. Delivered quantities remain unchanged and invoicable.
 7. **Delivery:** Warehouse Staff creates a delivery for an approved order with quantities ≤ the remaining (ordered − cancelled − committed) balance. The draft reserves no stock. Dispatch re-checks the balance and available reservation, then decrements `on_hand` and `reserved` and writes a `dispatch` movement. Confirm marks the delivery `delivered` and recalculates the order status from confirmed quantities (`partially_fulfilled` / `fulfilled`). A dispatched delivery can be flagged as a delivery exception and later resolved to `delivered` (confirm) or `cancelled` (reverse the dispatch, restoring `on_hand` and `reserved`). Open draft deliveries and unresolved exceptions block order cancellation.
 8. **Invoice:** Finance generates an invoice from a delivered delivery. One delivery has at most one active (non-void) invoice, and quantities are the still-uninvoiced delivered quantities. The invoice is created as `draft`; Finance must explicitly issue it (`draft → issued`) before it becomes a receivable. Due date = invoice date + customer payment terms. Voiding (`draft` or `issued`) requires a reason, is blocked once payment allocations exist, and resets the delivery's `invoiced_quantity` so a replacement invoice can be generated.
-9. **Payment:** Finance records a payment (amount, method, reference). Payment is allocated to invoices of the same customer. Allocation ≤ unallocated payment amount and ≤ invoice outstanding balance. Invoice status updates.
+9. **Payment:** Finance records a payment (date, amount, method, reference, optional notes). The payment starts as `recorded` and keeps its full amount unallocated. From the payment detail, Finance allocates it to one or more open invoices of the same customer in a single submission. Each allocation ≤ unallocated payment amount and ≤ invoice outstanding balance; the aggregate must also respect the unallocated amount. Unallocated value remains on the payment. Payment status is derived (`recorded`, `partially_allocated`, `fully_allocated`) and invoice statuses are refreshed in the same transaction. Allocations are immutable in the MVP; there is no reversal workflow.
 10. **Dashboard and audit:** Management views KPIs; the audit trail records all important actions.
 
 ### 6.2 Credit Exposure Calculation
@@ -719,8 +720,12 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 
 | From | To | Trigger | Rules |
 |---|---|---|---|
-| recorded | partially_allocated | allocate | allocation < amount |
-| recorded / partially_allocated | fully_allocated | allocate | unallocated = 0 |
+| recorded | partially_allocated | allocate | total allocated < payment amount |
+| recorded / partially_allocated | fully_allocated | allocate | total allocated = payment amount |
+
+**Allocation rule:** every allocation row references one payment and one invoice. All invoices in a submission must belong to the payment's customer and be `issued` or `partially_paid`. The sum of the submission cannot exceed the payment's unallocated amount, and each row cannot exceed the invoice's outstanding balance. Allocations, payment status, and invoice statuses are written in one database transaction so a partial failure leaves no allocation behind. Audit records capture the payment, customer, invoice numbers, amounts, and remaining unallocated amount.
+
+**Payment status is derived:** `recorded` when allocated = 0, `partially_allocated` when 0 < allocated < amount, and `fully_allocated` when allocated = amount. There is no payment reversal in the MVP.
 
 **Overdue** is computed on read: `due_date < today AND balance > 0 AND status NOT IN ('paid', 'void')`.
 
@@ -746,7 +751,7 @@ Numbering uses the `number_counters` table and is generated inside a transaction
 | BR-016 | Derived: `Partially Paid` when 0 < allocated < total. |
 | BR-017 | Derived on read (see 6.5). |
 | BR-018 | Service checks payment.customer_id = invoice.customer_id. |
-| BR-019 | Service checks allocation ≤ payment unallocated amount. |
+| BR-019 | Service checks aggregate allocations ≤ payment unallocated amount. |
 | BR-020 | Service checks allocation ≤ invoice outstanding balance. |
 | BR-021 | Validators require reason for reject/cancel/void. |
 | BR-022 | Service writes an audit record for every status transition. |
@@ -870,6 +875,7 @@ POST   /invoices/:id/issue
 POST   /invoices/:id/void
 
 GET    /payments
+GET    /payments/new
 GET    /payments/:id
 POST   /payments
 POST   /payments/:id/allocations

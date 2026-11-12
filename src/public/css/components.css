@@ -464,6 +464,11 @@
   font-size: 12px;
 }
 
+.money-input {
+  width: 132px;
+  text-align: right;
+}
+
 .help {
   font-size: 11.5px;
   color: var(--muted);

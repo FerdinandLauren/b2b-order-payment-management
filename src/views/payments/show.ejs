@@ -1,0 +1,217 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Finance · Payment</div>
+    <h1 class="page-title"><%= payment.payment_number %></h1>
+    <p class="page-sub">
+      <span class="badge badge-<%= badge(payment.status) %>"><%= enums.PAYMENT_STATUS[payment.status] %></span>
+      · <%= payment.customer_name %> · <%= helpers.date(payment.payment_date) %>
+    </p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/payments">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Payments
+    </a>
+    <a class="btn btn-secondary" href="/customers/<%= payment.customer_id %>">
+      <svg class="icon"><use href="#i-customers"></use></svg>
+      Customer
+    </a>
+  </div>
+</div>
+
+<% if (payment.status === 'fully_allocated') { %>
+  <div class="alert alert-success" role="status">
+    <svg class="icon"><use href="#i-check"></use></svg>
+    <div class="alert-body">
+      <p><strong>Fully allocated.</strong> Every part of this payment has been applied to customer invoices.</p>
+    </div>
+  </div>
+<% } else if (Number(payment.unallocated) > 0.005) { %>
+  <div class="alert alert-warning" role="status">
+    <svg class="icon"><use href="#i-alert"></use></svg>
+    <div class="alert-body">
+      <p><strong><%= helpers.rupiah(payment.unallocated) %> is still unallocated.</strong> Allocate it to open invoices of <%= payment.customer_name %> below.</p>
+    </div>
+  </div>
+<% } %>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Payment amount</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(payment.amount) %></div>
+    <div class="stat-meta"><%= enums.PAYMENT_METHOD[payment.method] || payment.method %></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Allocated</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(payment.allocated) %></div>
+    <div class="stat-meta"><%= allocations.length %> invoice allocation<%= allocations.length === 1 ? '' : 's' %></div>
+  </div>
+  <div class="stat <%= Number(payment.unallocated) > 0.005 ? 'stat-warning' : 'stat-success' %>">
+    <div class="stat-label">Unallocated</div>
+    <div class="stat-value stat-value-sm"><%= helpers.rupiah(payment.unallocated) %></div>
+    <div class="stat-meta">Remaining payment amount</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Payment date</div>
+    <div class="stat-value stat-value-sm"><%= helpers.date(payment.payment_date) %></div>
+    <div class="stat-meta">Recorded <%= helpers.datetime(payment.created_at) %></div>
+  </div>
+</div>
+
+<div class="detail-grid detail-grid-wide">
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Invoice allocations</div>
+          <div class="card-sub">Invoices this payment has been applied to.</div>
+        </div>
+      </div>
+      <% if (!allocations.length) { %>
+        <div class="empty">
+          <div class="empty-text">No invoice has been allocated from this payment yet.</div>
+        </div>
+      <% } else { %>
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Invoice</th>
+                <th>Source</th>
+                <th>Due date</th>
+                <th>Invoice status</th>
+                <th class="right">Invoice total</th>
+                <th class="right">Allocated</th>
+                <th class="right">Invoice balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% allocations.forEach(function (allocation) { %>
+                <tr>
+                  <td><a class="link" href="/invoices/<%= allocation.invoice_id %>"><%= allocation.invoice_number %></a></td>
+                  <td>
+                    <a class="link text-sm" href="/orders/<%= allocation.order_number %>"><%= allocation.order_number %></a>
+                    <div class="cell-sub cell-mono"><%= allocation.delivery_number %></div>
+                  </td>
+                  <td class="text-sm text-muted">
+                    <%= helpers.date(allocation.due_date) %>
+                    <% if (allocation.is_overdue) { %>
+                      <div><span class="badge badge-danger">Overdue</span></div>
+                    <% } %>
+                  </td>
+                  <td><span class="badge badge-<%= badge(allocation.invoice_status) %>"><%= enums.INVOICE_STATUS[allocation.invoice_status] %></span></td>
+                  <td class="right money"><%= helpers.rupiah(allocation.invoice_total) %></td>
+                  <td class="right money fw-600"><%= helpers.rupiah(allocation.amount) %></td>
+                  <td class="right money"><%= helpers.rupiah(allocation.invoice_balance) %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+
+    <% if (isFinance && canAllocate) { %>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Allocate to open invoices</div>
+            <div class="card-sub">
+              Enter amounts against one or more invoices. The total cannot exceed the
+              <%= helpers.rupiah(payment.unallocated) %> unallocated amount.
+            </div>
+          </div>
+        </div>
+        <form method="post" action="/payments/<%= payment.id %>/allocations">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="table-scroll">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Invoice</th>
+                  <th>Source</th>
+                  <th>Due date</th>
+                  <th class="right">Invoice total</th>
+                  <th class="right">Outstanding</th>
+                  <th class="right">Allocate</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% openInvoices.forEach(function (invoice) { %>
+                  <tr>
+                    <td>
+                      <a class="link" href="/invoices/<%= invoice.id %>"><%= invoice.invoice_number %></a>
+                      <input type="hidden" name="invoiceId" value="<%= invoice.id %>">
+                    </td>
+                    <td>
+                      <a class="link text-sm" href="/orders/<%= invoice.order_id %>"><%= invoice.order_number %></a>
+                    </td>
+                    <td class="text-sm text-muted">
+                      <%= helpers.date(invoice.due_date) %>
+                      <% if (invoice.is_overdue) { %>
+                        <div><span class="badge badge-danger">Overdue</span></div>
+                      <% } %>
+                    </td>
+                    <td class="right money"><%= helpers.rupiah(invoice.total) %></td>
+                    <td class="right money"><%= helpers.rupiah(invoice.balance) %></td>
+                    <td class="right">
+                      <input class="input input-sm money-input" name="amount" type="number" min="0" step="0.01"
+                             max="<%= Math.min(Number(invoice.balance), Number(payment.unallocated)) %>"
+                             placeholder="0" aria-label="Allocation for <%= invoice.invoice_number %>">
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+          <div class="card-body">
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Apply allocations</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    <% } else if (isFinance && Number(payment.unallocated) > 0.005) { %>
+      <div class="card">
+        <div class="card-body">
+          <p class="help"><%= payment.customer_name %> has no open issued invoices to allocate this payment to.</p>
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Payment details</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="meta-list">
+          <div class="meta-row meta-row-block">
+            <span class="meta-label">Customer</span>
+            <span class="meta-value"><a class="link" href="/customers/<%= payment.customer_id %>"><%= payment.customer_name %></a></span>
+          </div>
+          <div class="meta-row"><span class="meta-label">Customer code</span><span class="meta-value cell-mono"><%= payment.customer_code %></span></div>
+          <div class="meta-row"><span class="meta-label">Payment date</span><span class="meta-value"><%= helpers.date(payment.payment_date) %></span></div>
+          <div class="meta-row"><span class="meta-label">Method</span><span class="meta-value"><%= enums.PAYMENT_METHOD[payment.method] || payment.method %></span></div>
+          <div class="meta-row"><span class="meta-label">Reference</span><span class="meta-value"><%= payment.reference || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Status</span><span class="meta-value"><span class="badge badge-<%= badge(payment.status) %>"><%= enums.PAYMENT_STATUS[payment.status] %></span></span></div>
+          <div class="meta-row"><span class="meta-label">Recorded by</span><span class="meta-value"><%= payment.created_by_name || '—' %></span></div>
+          <div class="meta-row"><span class="meta-label">Recorded at</span><span class="meta-value"><%= helpers.datetime(payment.created_at) %></span></div>
+        </div>
+        <% if (payment.notes) { %>
+          <div class="alert alert-info mt-2" role="status">
+            <svg class="icon"><use href="#i-alert"></use></svg>
+            <div class="alert-body"><p><%= payment.notes %></p></div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>
