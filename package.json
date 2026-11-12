@@ -1,0 +1,38 @@
+{
+  "name": "b2b-order-payment-management",
+  "version": "1.0.0",
+  "private": true,
+  "description": "B2B Order & Payment Management System - Order-to-Cash for a wholesale distribution company",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:migrate": "node src/database/migrate.js",
+    "db:seed": "node src/database/seed.js",
+    "db:reset": "node src/database/reset.js",
+    "test": "jest --runInBand"
+  },
+  "keywords": [
+    "b2b",
+    "order-to-cash",
+    "erp",
+    "distribution",
+    "accounts-receivable"
+  ],
+  "author": "Ferdinand Lauren",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^12.4.1",
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4"
+  }
+}

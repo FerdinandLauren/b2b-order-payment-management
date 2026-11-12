@@ -1,0 +1,77 @@
+<%- include('../partials/head') %>
+
+<div class="page-head">
+  <div>
+    <div class="eyebrow">Administration · Users</div>
+    <h1 class="page-title"><%= mode === 'create' ? 'Add user' : 'Edit user' %></h1>
+    <p class="page-sub"><%= mode === 'create' ? 'Create a role-based account for a team member.' : 'Update the account details, role, or password.' %></p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-secondary" href="/users">
+      <svg class="icon"><use href="#i-arrow-left"></use></svg>
+      Back to users
+    </a>
+  </div>
+</div>
+
+<form method="post" action="<%= mode === 'create' ? '/users' : '/users/' + user.id %>">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Account details</div>
+        <div class="card-sub">Usernames are permanent identifiers and cannot be changed after creation.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field">
+          <label for="fullName">Full name <span class="req">*</span></label>
+          <input class="input" id="fullName" name="fullName" type="text" required
+                 value="<%= old.fullName || (user ? user.full_name : '') %>" placeholder="e.g. Siti Nurhaliza">
+        </div>
+
+        <div class="field">
+          <label for="username">Username <span class="req">*</span></label>
+          <% if (mode === 'create') { %>
+            <input class="input" id="username" name="username" type="text" required
+                   value="<%= old.username || '' %>" placeholder="e.g. siti.sales" autocomplete="off">
+            <div class="help">3-32 characters · letters, numbers, dots, underscores, hyphens.</div>
+          <% } else { %>
+            <input class="input" id="username" type="text" value="<%= user.username %>" disabled>
+            <div class="help">Username cannot be changed.</div>
+          <% } %>
+        </div>
+
+        <div class="field">
+          <label for="role">Role <span class="req">*</span></label>
+          <select class="select" id="role" name="role" required>
+            <option value="">Select a role</option>
+            <% enums.ROLE_LIST.forEach(function (role) { %>
+              <option value="<%= role %>" <%= (old.role || (user ? user.role : '')) === role ? 'selected' : '' %>>
+                <%= enums.ROLES[role] %>
+              </option>
+            <% }); %>
+          </select>
+          <div class="help">Permissions are enforced on every route.</div>
+        </div>
+
+        <div class="field">
+          <label for="password">Password <%= mode === 'create' ? '*' : '' %></label>
+          <input class="input" id="password" name="password" type="password" autocomplete="new-password"
+                 placeholder="<%= mode === 'create' ? 'At least 6 characters' : 'Leave blank to keep current password' %>"
+                 <%= mode === 'create' ? 'required' : '' %>>
+          <div class="help"><%= mode === 'create' ? 'Minimum 6 characters.' : 'Only fill this field to reset the password.' %></div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="/users">Cancel</a>
+        <button class="btn btn-primary" type="submit"><%= mode === 'create' ? 'Create user' : 'Save changes' %></button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<%- include('../partials/foot') %>

@@ -1,0 +1,12 @@
+<% if (flash) { %>
+  <% const messages = flash.messages || [flash.message]; %>
+  <div class="alert alert-<%= flash.type || 'info' %>" role="status">
+    <svg class="icon"><use href="#i-<%= flash.type === 'success' ? 'check' : 'alert' %>"></use></svg>
+    <div class="alert-body">
+      <% messages.forEach(function (message) { %>
+        <p><%= message %></p>
+      <% }); %>
+    </div>
+    <button type="button" class="alert-close" data-dismiss aria-label="Dismiss">&times;</button>
+  </div>
+<% } %>

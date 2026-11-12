@@ -1,0 +1,125 @@
+<%
+  const role = currentUser.role;
+  const isSales = role === 'sales_staff' || role === 'sales_supervisor';
+  const isWarehouse = role === 'warehouse_staff';
+  const isFinance = role === 'finance_staff';
+  const isManagement = role === 'management';
+  const isAdmin = role === 'admin';
+  const canSeeMaster = isSales || isWarehouse || isManagement || isAdmin;
+  const canSeeInvoices = isSales || isFinance || isManagement || isAdmin;
+  const canSeePayments = isFinance || isManagement || isAdmin;
+  const isActive = (path) => {
+    if (path === '/dashboard') return currentPath === '/dashboard' || currentPath === '/';
+    return currentPath === path || currentPath.startsWith(`${path}/`);
+  };
+%>
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">MB</div>
+    <div>
+      <div class="brand-name">PT Maju Bersama</div>
+      <div class="brand-sub">Order-to-Cash</div>
+    </div>
+  </div>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-group">
+      <div class="nav-label">Overview</div>
+      <a class="nav-link <%= isActive('/dashboard') ? 'active' : '' %>" href="/dashboard">
+        <svg class="nav-icon"><use href="#i-dashboard"></use></svg>
+        Dashboard
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Sales</div>
+      <% if (isSales || isFinance || isManagement || isAdmin) { %>
+        <a class="nav-link <%= isActive('/customers') ? 'active' : '' %>" href="/customers">
+          <svg class="nav-icon"><use href="#i-customers"></use></svg>
+          Customers
+        </a>
+      <% } %>
+      <a class="nav-link <%= isActive('/orders') ? 'active' : '' %>" href="/orders">
+        <svg class="nav-icon"><use href="#i-orders"></use></svg>
+        Sales Orders
+      </a>
+      <% if (role === 'sales_supervisor') { %>
+        <a class="nav-link <%= isActive('/approvals') ? 'active' : '' %>" href="/approvals">
+          <svg class="nav-icon"><use href="#i-approvals"></use></svg>
+          Approvals
+        </a>
+      <% } %>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Inventory</div>
+      <% if (canSeeMaster) { %>
+        <a class="nav-link <%= isActive('/products') ? 'active' : '' %>" href="/products">
+          <svg class="nav-icon"><use href="#i-products"></use></svg>
+          Products
+        </a>
+        <a class="nav-link <%= isActive('/inventory') ? 'active' : '' %>" href="/inventory">
+          <svg class="nav-icon"><use href="#i-inventory"></use></svg>
+          Inventory
+        </a>
+      <% } %>
+      <% if (isAdmin) { %>
+        <a class="nav-link <%= isActive('/categories') ? 'active' : '' %>" href="/categories">
+          <svg class="nav-icon"><use href="#i-categories"></use></svg>
+          Categories
+        </a>
+        <a class="nav-link <%= isActive('/warehouses') ? 'active' : '' %>" href="/warehouses">
+          <svg class="nav-icon"><use href="#i-warehouse"></use></svg>
+          Warehouses
+        </a>
+      <% } %>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Fulfillment</div>
+      <% if (isSales || isWarehouse || isManagement || isAdmin) { %>
+        <a class="nav-link <%= isActive('/deliveries') ? 'active' : '' %>" href="/deliveries">
+          <svg class="nav-icon"><use href="#i-deliveries"></use></svg>
+          Deliveries
+        </a>
+      <% } %>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Finance</div>
+      <% if (canSeeInvoices) { %>
+        <a class="nav-link <%= isActive('/invoices') ? 'active' : '' %>" href="/invoices">
+          <svg class="nav-icon"><use href="#i-invoices"></use></svg>
+          Invoices
+        </a>
+      <% } %>
+      <% if (canSeePayments) { %>
+        <a class="nav-link <%= isActive('/payments') ? 'active' : '' %>" href="/payments">
+          <svg class="nav-icon"><use href="#i-payments"></use></svg>
+          Payments
+        </a>
+      <% } %>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Administration</div>
+      <% if (isAdmin) { %>
+        <a class="nav-link <%= isActive('/users') ? 'active' : '' %>" href="/users">
+          <svg class="nav-icon"><use href="#i-users"></use></svg>
+          Users
+        </a>
+      <% } %>
+      <% if (isManagement || isAdmin) { %>
+        <a class="nav-link <%= isActive('/audit') ? 'active' : '' %>" href="/audit">
+          <svg class="nav-icon"><use href="#i-audit"></use></svg>
+          Audit Trail
+        </a>
+      <% } %>
+    </div>
+  </nav>
+
+  <div class="sidebar-foot">
+    <strong>B2B O2C System</strong> · v1.0<br>
+    Portfolio prototype · fictional data
+  </div>
+</aside>

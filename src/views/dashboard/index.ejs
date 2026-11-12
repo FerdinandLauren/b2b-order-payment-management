@@ -1,0 +1,99 @@
+<%- include('../partials/head') %>
+
+<div class="welcome">
+  <div>
+    <div class="welcome-eyebrow"><%= roleLabel %></div>
+    <h1><%= guide.heading %></h1>
+    <p><%= guide.description %></p>
+    <div class="welcome-actions">
+      <% guide.actions.forEach(function (action) { %>
+        <a class="btn btn-on-dark btn-sm" href="<%= action.href %>"><%= action.label %></a>
+      <% }); %>
+    </div>
+  </div>
+  <div class="welcome-status">
+    <div class="welcome-date"><%= todayLabel %></div>
+    <div class="welcome-role">
+      <svg class="icon icon-sm"><use href="#i-lock"></use></svg>
+      <%= roleLabel %> access
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <div>
+      <div class="eyebrow">Process reference</div>
+      <div class="card-title">Order-to-Cash flow</div>
+      <div class="card-sub">Every order follows the same controlled lifecycle, from capture to receivable settlement.</div>
+    </div>
+  </div>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-no">01</div>
+      <div class="flow-title">Order capture</div>
+      <div class="flow-text">Customer, products, quantities, negotiated prices.</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-no">02</div>
+      <div class="flow-title">Validation</div>
+      <div class="flow-text">Active customer, valid products, positive quantities.</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-no">03</div>
+      <div class="flow-title">Approval</div>
+      <div class="flow-text">Credit exposure review and supervisor decision.</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-no">04</div>
+      <div class="flow-title">Reservation</div>
+      <div class="flow-text">Stock reserved atomically when the order is approved.</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-no">05</div>
+      <div class="flow-title">Delivery</div>
+      <div class="flow-text">Partial dispatch, confirmation, or exception handling.</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-no">06</div>
+      <div class="flow-title">Invoice</div>
+      <div class="flow-text">One invoice per delivery, due date from payment terms.</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-no">07</div>
+      <div class="flow-title">Payment</div>
+      <div class="flow-text">Allocation, outstanding balance, overdue monitoring.</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-3 mt-2">
+  <div class="card">
+    <div class="card-body">
+      <div class="stat-label">Business rules enforced</div>
+      <div class="stat-value">28</div>
+      <div class="stat-meta">Documented rules mapped to system behavior</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <div class="stat-label">Controlled roles</div>
+      <div class="stat-value">6</div>
+      <div class="stat-meta">Least privilege and segregation of duties</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <div class="stat-label">Transaction integrity</div>
+      <div class="stat-value stat-value-sm">Atomic writes</div>
+      <div class="stat-meta">Approval, delivery, invoice, and payment flows</div>
+    </div>
+  </div>
+</div>
+
+<p class="text-xs text-muted mt-3">
+  This dashboard is being implemented milestone by milestone. Operational KPIs will appear here once the
+  Order-to-Cash workflow is complete.
+</p>
+
+<%- include('../partials/foot') %>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="B2B Order &amp; Payment Management System — Order-to-Cash for wholesale distribution.">
+  <title><%= title %> · <%= companyName %></title>
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+</head>
+<body>
+<%- include('icons') %>
+<div class="app-shell" id="appShell">
+  <div class="sidebar-overlay" data-close-sidebar></div>
+  <%- include('sidebar') %>
+  <div class="app-body">
+    <%- include('topbar') %>
+    <main class="page">
+      <%- include('flash') %>

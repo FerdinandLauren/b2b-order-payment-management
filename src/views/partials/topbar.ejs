@@ -1,0 +1,27 @@
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="menu-btn" type="button" data-toggle-sidebar aria-label="Open navigation">
+      <svg class="icon"><use href="#i-menu"></use></svg>
+    </button>
+    <span class="topbar-title"><%= title %></span>
+    <span class="topbar-sep">/</span>
+    <span class="topbar-context"><%= companyName %></span>
+  </div>
+
+  <div class="topbar-right">
+    <div class="user-chip">
+      <div class="avatar"><%= initials(currentUser.full_name) %></div>
+      <div class="user-chip-text">
+        <div class="user-chip-name"><%= currentUser.full_name %></div>
+        <div class="user-chip-role"><%= enums.ROLES[currentUser.role] %></div>
+      </div>
+    </div>
+    <form method="post" action="/logout">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="logout-btn" type="submit">
+        <svg class="icon"><use href="#i-logout"></use></svg>
+        Sign out
+      </button>
+    </form>
+  </div>
+</header>

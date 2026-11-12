@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unexpected error · <%= companyName %></title>
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+</head>
+<body class="error-page">
+  <div class="error-card">
+    <div class="brand-mark error-mark">MB</div>
+    <div class="error-code">500</div>
+    <div class="error-title">Something went wrong</div>
+    <p class="error-text">
+      The request could not be completed. No partial transaction was saved. Please try again or contact the administrator.
+    </p>
+    <div class="error-actions">
+      <a class="btn btn-secondary" href="<%= currentUser ? '/dashboard' : '/login' %>">Go back</a>
+      <% if (currentUser) { %>
+        <a class="btn btn-primary" href="/dashboard">Dashboard</a>
+      <% } %>
+    </div>
+  </div>
+</body>
+</html>

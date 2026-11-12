@@ -1,0 +1,1016 @@
+# Technical Design Document
+## B2B Order & Payment Management System
+
+**Version:** 1.0
+**Date:** 2026-11-12
+**Status:** Draft for Approval
+**Related Documents:** PRD.md, PLAN.md, DESIGN.md
+
+---
+
+## 1. Purpose and Scope
+
+This document translates the business requirements (PRD.md) and the conceptual design (DESIGN.md) into a technical implementation design for the MVP.
+
+It covers:
+
+- Technology stack and architecture.
+- Database schema.
+- Application layers and module structure.
+- Business logic, status transitions, and business rules.
+- Role-based access control.
+- Route design.
+- UI structure.
+- Validation, error handling, and audit.
+- Testing strategy.
+
+**Confirmed decisions (2026-11-12):**
+
+| Decision | Choice |
+|---|---|
+| Tech stack | Node.js + Express + SQLite (better-sqlite3) + EJS |
+| Architecture | Layered modular: routes → controllers → services → repositories → models |
+| Role model | 6 roles from PRD.md (authoritative) |
+| Credit limit | Warning + supervisor override with mandatory justification |
+| Invoicing | Per delivery (one delivery → one invoice) |
+| Tax | Outside MVP; schema kept extensible |
+| Scope | Full O2C + Management Dashboard + Audit Trail |
+
+---
+
+## 2. Technology Stack
+
+| Layer | Choice | Reason |
+|---|---|---|
+| Runtime | Node.js LTS | Single language, large ecosystem |
+| Web framework | Express.js | Minimal, mature, easy to structure |
+| Database | SQLite (file-based) | Zero-config, transactional, easy to demo |
+| DB driver | better-sqlite3 | Synchronous API, transactions, no ORM overhead |
+| Templating | EJS | Server-rendered, no build step |
+| Styling | Custom CSS (design tokens) | No framework overhead, full control |
+| Auth | express-session + bcryptjs | Simple session-based auth |
+| Validation | express-validator | Standard declarative input validation |
+| Security headers | helmet | Small, standard |
+| Testing | Jest + Supertest | Unit + HTTP integration testing |
+| Env | dotenv | Environment configuration |
+
+**No ORM, no SPA framework, no build tooling.** The application is a server-rendered modular monolith.
+
+---
+
+## 3. Architecture
+
+### 3.1 Layered Architecture
+
+```
+HTTP Request
+    │
+    ▼
+Route (routes/)            → defines endpoints, applies middleware
+    │
+    ▼
+Middleware (middleware/)   → auth, RBAC, validation, error handling
+    │
+    ▼
+Controller (controllers/)  → request/response handling, calls service
+    │
+    ▼
+Service (services/)        → business logic, business rules, transactions
+    │
+    ▼
+Repository (repositories/) → data access, SQL queries
+    │
+    ▼
+Database (SQLite)
+```
+
+**Layer rules:**
+
+- Routes never contain business logic.
+- Controllers never contain SQL.
+- Services own business rules and transaction boundaries.
+- Repositories own all SQL and are the only layer that touches the database.
+- Validation happens at two levels: input validation (route middleware) and business-rule validation (services).
+
+### 3.2 Transaction Integrity
+
+All multi-write operations run inside a SQLite transaction (`better-sqlite3` `db.transaction()`). If any step fails, the transaction rolls back. This applies to:
+
+- Order approval + inventory reservation.
+- Delivery dispatch + stock decrement.
+- Invoice generation + delivery-line update.
+- Payment recording + allocation + invoice status update.
+- Order cancellation + reservation release.
+
+---
+
+## 4. Folder Structure
+
+```text
+b2b-order-payment-management/
+├── PRD.md
+├── PLAN.md
+├── DESIGN.md
+├── README.md
+├── docs/
+│   ├── technical-design.md
+│   ├── business-process/
+│   │   ├── as-is-process.md
+│   │   └── to-be-process.md
+│   ├── requirements/
+│   │   ├── user-stories.md
+│   │   ├── business-rules.md
+│   │   └── traceability-matrix.md
+│   ├── testing/
+│   │   ├── test-plan.md
+│   │   └── uat-scenarios.md
+│   └── decisions/
+│       └── architecture-decisions.md
+├── src/
+│   ├── app.js
+│   ├── server.js
+│   ├── config/
+│   │   ├── env.js
+│   │   └── database.js
+│   ├── database/
+│   │   ├── migrate.js
+│   │   ├── seed.js
+│   │   ├── migrations/
+│   │   │   ├── 001_create_users.sql
+│   │   │   ├── 002_create_customers.sql
+│   │   │   ├── 003_create_products.sql
+│   │   │   ├── 004_create_inventory.sql
+│   │   │   ├── 005_create_sales_orders.sql
+│   │   │   ├── 006_create_deliveries.sql
+│   │   │   ├── 007_create_invoices.sql
+│   │   │   ├── 008_create_payments.sql
+│   │   │   └── 009_create_audit_and_settings.sql
+│   │   └── seeders/
+│   │       ├── users.seeder.js
+│   │       ├── customers.seeder.js
+│   │       ├── products.seeder.js
+│   │       └── transactions.seeder.js
+│   ├── models/
+│   │   ├── user.model.js
+│   │   ├── customer.model.js
+│   │   ├── product.model.js
+│   │   ├── warehouse.model.js
+│   │   ├── inventory.model.js
+│   │   ├── sales-order.model.js
+│   │   ├── delivery.model.js
+│   │   ├── invoice.model.js
+│   │   ├── payment.model.js
+│   │   └── audit-log.model.js
+│   ├── repositories/
+│   │   ├── user.repository.js
+│   │   ├── customer.repository.js
+│   │   ├── product.repository.js
+│   │   ├── inventory.repository.js
+│   │   ├── sales-order.repository.js
+│   │   ├── delivery.repository.js
+│   │   ├── invoice.repository.js
+│   │   ├── payment.repository.js
+│   │   └── audit.repository.js
+│   ├── services/
+│   │   ├── auth.service.js
+│   │   ├── customer.service.js
+│   │   ├── product.service.js
+│   │   ├── inventory.service.js
+│   │   ├── order.service.js
+│   │   ├── approval.service.js
+│   │   ├── delivery.service.js
+│   │   ├── invoice.service.js
+│   │   ├── payment.service.js
+│   │   ├── dashboard.service.js
+│   │   └── audit.service.js
+│   ├── controllers/
+│   │   ├── auth.controller.js
+│   │   ├── customer.controller.js
+│   │   ├── product.controller.js
+│   │   ├── inventory.controller.js
+│   │   ├── order.controller.js
+│   │   ├── approval.controller.js
+│   │   ├── delivery.controller.js
+│   │   ├── invoice.controller.js
+│   │   ├── payment.controller.js
+│   │   ├── dashboard.controller.js
+│   │   ├── user.controller.js
+│   │   └── audit.controller.js
+│   ├── routes/
+│   │   ├── index.js
+│   │   ├── auth.routes.js
+│   │   ├── customer.routes.js
+│   │   ├── product.routes.js
+│   │   ├── inventory.routes.js
+│   │   ├── order.routes.js
+│   │   ├── approval.routes.js
+│   │   ├── delivery.routes.js
+│   │   ├── invoice.routes.js
+│   │   ├── payment.routes.js
+│   │   ├── dashboard.routes.js
+│   │   ├── user.routes.js
+│   │   └── audit.routes.js
+│   ├── middleware/
+│   │   ├── auth.middleware.js
+│   │   ├── rbac.middleware.js
+│   │   ├── validate.middleware.js
+│   │   ├── error.middleware.js
+│   │   └── csrf.middleware.js
+│   ├── validators/
+│   │   ├── auth.validator.js
+│   │   ├── customer.validator.js
+│   │   ├── product.validator.js
+│   │   ├── order.validator.js
+│   │   ├── delivery.validator.js
+│   │   ├── invoice.validator.js
+│   │   └── payment.validator.js
+│   ├── utils/
+│   │   ├── constants.js
+│   │   ├── format.js
+│   │   ├── numbering.js
+│   │   ├── ApiError.js
+│   │   └── logger.js
+│   ├── views/
+│   │   ├── layouts/
+│   │   │   └── main.ejs
+│   │   ├── partials/
+│   │   │   ├── header.ejs
+│   │   │   ├── sidebar.ejs
+│   │   │   ├── footer.ejs
+│   │   │   ├── status-badge.ejs
+│   │   │   └── flash.ejs
+│   │   ├── auth/
+│   │   │   └── login.ejs
+│   │   ├── dashboard/
+│   │   │   └── index.ejs
+│   │   ├── customers/
+│   │   ├── products/
+│   │   ├── inventory/
+│   │   ├── orders/
+│   │   ├── approvals/
+│   │   ├── deliveries/
+│   │   ├── invoices/
+│   │   ├── payments/
+│   │   ├── users/
+│   │   └── audit/
+│   └── public/
+│       ├── css/
+│       │   ├── reset.css
+│       │   ├── tokens.css
+│       │   ├── components.css
+│       │   └── layout.css
+│       ├── js/
+│       │   ├── app.js
+│       │   └── order-form.js
+│       └── images/
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── fixtures/
+├── database/
+│   └── b2b.db
+├── .env
+├── .env.example
+├── .gitignore
+├── package.json
+└── jest.config.js
+```
+
+---
+
+## 5. Database Schema
+
+### 5.1 Entity Relationship Overview
+
+```text
+users ──< audit_logs
+users ──< sales_orders (created_by)
+users ──< order_approvals (acted_by)
+users ──< deliveries (created_by)
+users ──< invoices (created_by)
+users ──< payments (created_by)
+users ──< stock_movements (created_by)
+
+customers ──< sales_orders ──< sales_order_lines >── products
+sales_orders ──< deliveries ──< delivery_lines >── sales_order_lines
+deliveries ──< invoices ──< invoice_lines >── delivery_lines
+customers ──< invoices
+customers ──< payments ──< payment_allocations >── invoices
+
+warehouses ──< inventory_balances >── products
+warehouses ──< stock_movements
+products ──< stock_movements
+```
+
+### 5.2 Tables
+
+**users**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK, AUTOINCREMENT |
+| username | TEXT | UNIQUE, NOT NULL |
+| password_hash | TEXT | NOT NULL |
+| full_name | TEXT | NOT NULL |
+| role | TEXT | NOT NULL, CHECK (`sales_staff`, `sales_supervisor`, `warehouse_staff`, `finance_staff`, `management`, `admin`) |
+| status | TEXT | NOT NULL, default `active` |
+| created_at | TEXT | NOT NULL |
+| updated_at | TEXT | NOT NULL |
+
+**customers**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| code | TEXT | UNIQUE, NOT NULL (`CUST-NNNN`) |
+| name | TEXT | NOT NULL |
+| address | TEXT | |
+| city | TEXT | |
+| phone | TEXT | |
+| email | TEXT | |
+| npwp | TEXT | |
+| payment_terms_days | INTEGER | NOT NULL, default 30 |
+| credit_limit | REAL | NOT NULL, default 0 |
+| status | TEXT | NOT NULL, default `active` |
+| created_at | TEXT | |
+| updated_at | TEXT | |
+
+**product_categories**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| name | TEXT | NOT NULL |
+| created_at | TEXT | |
+
+**products**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| sku | TEXT | UNIQUE, NOT NULL (`PRD-NNNN`) |
+| name | TEXT | NOT NULL |
+| category_id | INTEGER | FK → product_categories |
+| unit | TEXT | NOT NULL (`pcs`, `box`, `kg`, `ltr`, `unit`) |
+| unit_price | REAL | NOT NULL, default 0 |
+| status | TEXT | NOT NULL, default `active` |
+| created_at | TEXT | |
+| updated_at | TEXT | |
+
+**warehouses**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| code | TEXT | UNIQUE, NOT NULL |
+| name | TEXT | NOT NULL |
+| address | TEXT | |
+| status | TEXT | NOT NULL, default `active` |
+| created_at | TEXT | |
+
+**inventory_balances**
+
+| Column | Type | Constraints |
+|---|---|---|
+| warehouse_id | INTEGER | FK → warehouses, PK (composite) |
+| product_id | INTEGER | FK → products, PK (composite) |
+| on_hand | REAL | NOT NULL, default 0 |
+| reserved | REAL | NOT NULL, default 0 |
+
+**stock_movements**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| product_id | INTEGER | FK → products, NOT NULL |
+| warehouse_id | INTEGER | FK → warehouses, NOT NULL |
+| movement_type | TEXT | NOT NULL (`receipt`, `dispatch`, `adjustment_in`, `adjustment_out`, `reservation`, `reservation_release`) |
+| quantity | REAL | NOT NULL (signed) |
+| reference_type | TEXT | (`sales_order`, `delivery`, `adjustment`) |
+| reference_id | INTEGER | |
+| reason | TEXT | |
+| created_by | INTEGER | FK → users |
+| created_at | TEXT | NOT NULL |
+
+**sales_orders**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| order_number | TEXT | UNIQUE, NOT NULL (`SO-YYYY-NNNN`) |
+| customer_id | INTEGER | FK → customers, NOT NULL |
+| order_date | TEXT | NOT NULL |
+| status | TEXT | NOT NULL (`draft`, `submitted`, `approved`, `rejected`, `partially_fulfilled`, `partially_cancelled`, `fulfilled`, `cancelled`) |
+| subtotal | REAL | NOT NULL, default 0 |
+| total | REAL | NOT NULL, default 0 |
+| currency | TEXT | NOT NULL, default `IDR` |
+| notes | TEXT | |
+| created_by | INTEGER | FK → users |
+| submitted_at | TEXT | |
+| created_at | TEXT | |
+| updated_at | TEXT | |
+
+**sales_order_lines**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| order_id | INTEGER | FK → sales_orders, NOT NULL |
+| product_id | INTEGER | FK → products, NOT NULL |
+| quantity | REAL | NOT NULL |
+| unit_price | REAL | NOT NULL |
+| line_total | REAL | NOT NULL |
+
+**order_approvals**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| order_id | INTEGER | FK → sales_orders, NOT NULL |
+| action | TEXT | NOT NULL (`submitted`, `approved`, `rejected`, `cancelled`) |
+| reason | TEXT | required for `rejected` / `cancelled` / override |
+| is_override | INTEGER | NOT NULL, default 0 |
+| acted_by | INTEGER | FK → users |
+| acted_at | TEXT | NOT NULL |
+
+**deliveries**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| delivery_number | TEXT | UNIQUE, NOT NULL (`DN-YYYY-NNNN`) |
+| order_id | INTEGER | FK → sales_orders, NOT NULL |
+| delivery_date | TEXT | NOT NULL |
+| status | TEXT | NOT NULL (`draft`, `dispatched`, `delivered`, `delivery_exception`, `cancelled`) |
+| notes | TEXT | |
+| created_by | INTEGER | FK → users |
+| dispatched_at | TEXT | |
+| delivered_at | TEXT | |
+| created_at | TEXT | |
+| updated_at | TEXT | |
+
+**delivery_lines**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| delivery_id | INTEGER | FK → deliveries, NOT NULL |
+| order_line_id | INTEGER | FK → sales_order_lines, NOT NULL |
+| product_id | INTEGER | FK → products, NOT NULL |
+| quantity | REAL | NOT NULL |
+| invoiced_quantity | REAL | NOT NULL, default 0 |
+
+**invoices**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| invoice_number | TEXT | UNIQUE, NOT NULL (`INV-YYYY-NNNN`) |
+| customer_id | INTEGER | FK → customers, NOT NULL |
+| order_id | INTEGER | FK → sales_orders, NOT NULL |
+| delivery_id | INTEGER | FK → deliveries, NOT NULL |
+| invoice_date | TEXT | NOT NULL |
+| due_date | TEXT | NOT NULL |
+| status | TEXT | NOT NULL (`draft`, `issued`, `partially_paid`, `paid`, `void`) |
+| subtotal | REAL | NOT NULL, default 0 |
+| tax_rate | REAL | NOT NULL, default 0 (reserved for future) |
+| tax_amount | REAL | NOT NULL, default 0 (reserved for future) |
+| total | REAL | NOT NULL, default 0 |
+| currency | TEXT | NOT NULL, default `IDR` |
+| created_by | INTEGER | FK → users |
+| issued_at | TEXT | |
+| voided_at | TEXT | |
+| void_reason | TEXT | |
+| created_at | TEXT | |
+| updated_at | TEXT | |
+
+**invoice_lines**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| invoice_id | INTEGER | FK → invoices, NOT NULL |
+| delivery_line_id | INTEGER | FK → delivery_lines, NOT NULL |
+| product_id | INTEGER | FK → products, NOT NULL |
+| quantity | REAL | NOT NULL |
+| unit_price | REAL | NOT NULL |
+| line_total | REAL | NOT NULL |
+
+**payments**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| payment_number | TEXT | UNIQUE, NOT NULL (`PAY-YYYY-NNNN`) |
+| customer_id | INTEGER | FK → customers, NOT NULL |
+| payment_date | TEXT | NOT NULL |
+| amount | REAL | NOT NULL |
+| method | TEXT | NOT NULL (`cash`, `transfer`, `cheque`, `other`) |
+| reference | TEXT | |
+| status | TEXT | NOT NULL (`recorded`, `partially_allocated`, `fully_allocated`, `reversed`) |
+| notes | TEXT | |
+| created_by | INTEGER | FK → users |
+| created_at | TEXT | |
+| updated_at | TEXT | |
+
+**payment_allocations**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| payment_id | INTEGER | FK → payments, NOT NULL |
+| invoice_id | INTEGER | FK → invoices, NOT NULL |
+| amount | REAL | NOT NULL |
+| created_at | TEXT | NOT NULL |
+
+**audit_logs**
+
+| Column | Type | Constraints |
+|---|---|---|
+| id | INTEGER | PK |
+| user_id | INTEGER | FK → users |
+| action | TEXT | NOT NULL |
+| entity_type | TEXT | NOT NULL |
+| entity_id | INTEGER | |
+| details | TEXT | JSON |
+| created_at | TEXT | NOT NULL |
+
+**settings**
+
+| Column | Type | Constraints |
+|---|---|---|
+| key | TEXT | PK |
+| value | TEXT | |
+| updated_at | TEXT | |
+
+**number_counters**
+
+| Column | Type | Constraints |
+|---|---|---|
+| entity | TEXT | PK (composite) |
+| year | TEXT | PK (composite) |
+| last_number | INTEGER | NOT NULL, default 0 |
+
+### 5.3 Indexes
+
+- `users(username)`, `customers(code)`, `products(sku)`
+- `sales_orders(order_number)`, `sales_orders(customer_id)`, `sales_orders(status)`
+- `deliveries(delivery_number)`, `deliveries(order_id)`, `deliveries(status)`
+- `invoices(invoice_number)`, `invoices(customer_id)`, `invoices(status)`, `invoices(due_date)`
+- `payments(payment_number)`, `payments(customer_id)`
+- `payment_allocations(payment_id)`, `payment_allocations(invoice_id)`
+- `stock_movements(product_id, warehouse_id)`
+- `audit_logs(entity_type, entity_id)`, `audit_logs(created_at)`
+
+---
+
+## 6. Business Logic
+
+### 6.1 Order-to-Cash Flow
+
+1. **Create order (draft):** Sales Staff selects an active customer and adds lines (active products, qty > 0). The system calculates line totals and order total.
+2. **Submit:** status `draft → submitted`. The system validates the customer is active, products are active, quantities > 0, and calculates credit exposure.
+3. **Credit check:** exposure = outstanding issued invoice balances + approved orders not yet invoiced + the current order under approval. The system calculates and displays a warning when the supervisor reviews the order (no block). The check is recomputed at approval time so it always reflects current data. The warning shows: credit limit, existing exposure, current order value, projected exposure, and excess amount.
+4. **Approve:** Supervisor reviews. If a credit warning exists, the supervisor must provide an override justification. Status `submitted → approved`. The system reserves stock (`on_hand - reserved >= qty`). If stock is insufficient, approval is rejected with a reason. Audit log records the action and override.
+5. **Reject:** status `submitted → rejected`, reason required. No reservation.
+6. **Cancel:** eligible orders (`draft`, `submitted`, `approved`, `partially_fulfilled`) → `cancelled` (no deliveries) or `partially_cancelled` (partial deliveries), reason required. Releases reservation for the cancelled (undelivered) quantities only. Delivered quantities remain unchanged and invoicable.
+7. **Delivery:** Warehouse creates a delivery from an approved order, with quantities ≤ remaining order quantity. Dispatch → stock decrement (`on_hand -= qty`, `reserved -= qty`), status `dispatched`. Confirm → `delivered`. Order status → `partially_fulfilled` / `fulfilled`.
+8. **Invoice:** Finance generates an invoice from a delivered delivery. One invoice per delivery. Quantities = delivered quantity. Status `draft → issued`. Due date = invoice date + customer payment terms.
+9. **Payment:** Finance records a payment (amount, method, reference). Payment is allocated to invoices of the same customer. Allocation ≤ unallocated payment amount and ≤ invoice outstanding balance. Invoice status updates.
+10. **Dashboard and audit:** Management views KPIs; the audit trail records all important actions.
+
+### 6.2 Credit Exposure Calculation
+
+```text
+exposure = outstanding_invoiced + approved_not_invoiced + current_order
+
+outstanding_invoiced =
+    SUM(invoice.total - SUM(allocation.amount))
+    FOR invoices OF customer
+    WHERE status IN ('issued', 'partially_paid')
+      AND balance > 0
+
+approved_not_invoiced =
+    SUM(order.total FOR orders OF customer
+        WHERE status IN ('approved', 'partially_fulfilled', 'fulfilled'))
+    - SUM(invoice.total FOR invoices LINKED TO those orders
+          WHERE status != 'void')
+
+current_order =
+    order.total FOR the order currently under approval
+    (0 when the check is not tied to a specific order)
+```
+
+**Rules:**
+
+- The current order's value is included in the exposure check while it is under approval.
+- When the order is approved, it moves into `approved_not_invoiced`; it is not counted twice.
+- Partially invoiced orders contribute only their remaining uninvoiced value, so exposure never duplicates invoice balances.
+- The calculation is performed inside a transaction to avoid double-counting and race conditions.
+
+**Warning display:** credit limit, existing exposure, current order value, projected exposure, and excess amount.
+
+### 6.3 Inventory Calculations
+
+```text
+available = on_hand - reserved
+```
+
+- **Reservation (on approval):** `reserved += qty`
+- **Dispatch:** `on_hand -= qty`, `reserved -= qty`
+- **Cancellation:** `reserved -= remaining_reserved`
+
+**Per-order-line reserved quantity** is computed as `order_line.quantity - Σ delivery_lines.quantity` for that line. No separate per-line reservation column is required.
+
+### 6.4 Numbering
+
+| Entity | Format |
+|---|---|
+| Customer | `CUST-NNNN` |
+| Product | `PRD-NNNN` |
+| Sales Order | `SO-YYYY-NNNN` |
+| Delivery | `DN-YYYY-NNNN` |
+| Invoice | `INV-YYYY-NNNN` |
+| Payment | `PAY-YYYY-NNNN` |
+
+Numbering uses the `number_counters` table and is generated inside a transaction.
+
+### 6.5 Status Transitions
+
+**Sales Order**
+
+| From | To | Trigger | Rules |
+|---|---|---|---|
+| draft | submitted | submit | customer active, ≥1 line, qty > 0 |
+| submitted | approved | approve | stock available; credit warning → override + justification |
+| submitted | rejected | reject | reason required |
+| submitted | cancelled | cancel | reason required |
+| approved | cancelled | cancel | reason required; release full reservation |
+| approved | partially_cancelled | cancel remaining | reason required; release reservation for undelivered qty |
+| partially_fulfilled | partially_cancelled | cancel remaining | reason required; release reservation for undelivered qty |
+| approved | partially_fulfilled | delivery confirmed | partial delivery confirmed |
+| partially_fulfilled | fulfilled | delivery confirmed | all quantities delivered |
+| approved | fulfilled | delivery confirmed | all quantities delivered at once |
+
+**Cancellation rules:**
+
+- Orders with no deliveries can be fully cancelled.
+- Orders with partial deliveries can only cancel their remaining undelivered quantities.
+- Already delivered quantities remain unchanged and can still be invoiced.
+- Reservations are released only for the cancelled (undelivered) quantities.
+- Cancellation of delivered or invoiced quantities is prevented.
+- A cancellation reason is required and recorded in the audit trail.
+- Order status becomes `partially_cancelled` (partial deliveries) or `cancelled` (no deliveries).
+- Credit exposure is recalculated after cancellation.
+
+**Delivery**
+
+| From | To | Trigger | Rules |
+|---|---|---|---|
+| draft | dispatched | dispatch | qty ≤ remaining order qty |
+| dispatched | delivered | confirm | |
+| draft | cancelled | cancel | reason required |
+| dispatched | delivery_exception | exception | reason required |
+| delivery_exception | delivered | resolve | exception resolved; goods received |
+| delivery_exception | cancelled | resolve | exception resolved; goods not received; reverse dispatch stock |
+
+**Invoice**
+
+| From | To | Trigger | Rules |
+|---|---|---|---|
+| draft | issued | issue | delivery is `delivered`; not already invoiced |
+| issued | partially_paid | allocate | partial allocation |
+| issued / partially_paid | paid | allocate | balance = 0 |
+| issued | void | void | reason required; only when the invoice has no payment allocations |
+
+**Void rule:** voiding an invoice releases its delivery lines (`invoiced_quantity` reset to 0) so the delivery can be re-invoiced. Invoices with payment allocations cannot be voided in the MVP.
+
+**Payment**
+
+| From | To | Trigger | Rules |
+|---|---|---|---|
+| recorded | partially_allocated | allocate | allocation < amount |
+| recorded / partially_allocated | fully_allocated | allocate | unallocated = 0 |
+
+**Overdue** is computed on read: `due_date < today AND balance > 0 AND status NOT IN ('paid', 'void')`.
+
+### 6.6 Business Rules Mapping
+
+| Rule | Implementation |
+|---|---|
+| BR-001 | Service validates customer status before order creation. |
+| BR-002 | Service validates product status before adding a line. |
+| BR-003 | Validator rejects qty ≤ 0. |
+| BR-004 | Service computes `line_total = qty × unit_price`; `subtotal = Σ line_total`; `total = subtotal`. |
+| BR-005 | Service checks current status before approve/reject. |
+| BR-006 | Service checks `available >= qty` for every line before approval. |
+| BR-007 | On approval, service increments `reserved` per line and writes a `reservation` stock movement. |
+| BR-008 | Rejection performs no reservation. |
+| BR-009 | On cancellation, service releases remaining `reserved` and writes a `reservation_release` movement. |
+| BR-010 | Service checks delivery qty ≤ remaining order line qty. |
+| BR-011 | On dispatch, service decrements `on_hand` and `reserved`, writes a `dispatch` movement. |
+| BR-012 | Invoice service checks `invoiced_quantity` on the delivery line. |
+| BR-013 | `invoice_number` is UNIQUE; generated from `number_counters`. |
+| BR-014 | No update route exists for issued invoices; only void is allowed. |
+| BR-015 | Derived: `balance = total - Σ allocations`; `Paid` when balance = 0. |
+| BR-016 | Derived: `Partially Paid` when 0 < allocated < total. |
+| BR-017 | Derived on read (see 6.5). |
+| BR-018 | Service checks payment.customer_id = invoice.customer_id. |
+| BR-019 | Service checks allocation ≤ payment unallocated amount. |
+| BR-020 | Service checks allocation ≤ invoice outstanding balance. |
+| BR-021 | Validators require reason for reject/cancel/void. |
+| BR-022 | Service writes an audit record for every status transition. |
+| BR-023 | Credit warning is computed on submission; approval with warning requires override + justification. |
+| BR-024 | One delivery generates at most one invoice; invoice qty = delivered qty. |
+| BR-025 | A delivery line cannot be invoiced twice. |
+
+---
+
+## 7. Role-Based Access Control
+
+### 7.1 Roles (from PRD.md)
+
+1. Sales Staff
+2. Sales Supervisor
+3. Warehouse Staff
+4. Finance Staff
+5. Management
+6. Admin
+
+### 7.2 Permission Matrix
+
+| Feature | Sales Staff | Sales Supervisor | Warehouse Staff | Finance Staff | Management | Admin |
+|---|---|---|---|---|---|---|
+| Login / logout | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Dashboard | own view | sales view | fulfillment view | finance view | full | full |
+| Customer list / view | ✓ | ✓ | – | ✓ | ✓ | ✓ |
+| Customer create / edit | ✓ | ✓ | – | – | – | ✓ |
+| Product list / view | ✓ | ✓ | ✓ | – | ✓ | ✓ |
+| Product create / edit | – | – | – | – | – | ✓ |
+| Inventory view | ✓ | ✓ | ✓ | – | ✓ | ✓ |
+| Stock adjustment | – | – | ✓ | – | – | ✓ |
+| Order create / edit draft | ✓ | ✓ | – | – | – | – |
+| Order submit | ✓ | ✓ | – | – | – | – |
+| Order cancel | own draft | ✓ | – | – | – | – |
+| Approval queue | – | ✓ | – | – | – | – |
+| Approve / reject | – | ✓ | – | – | – | – |
+| Delivery view | ✓ | ✓ | ✓ | – | ✓ | ✓ |
+| Delivery create / dispatch / confirm | – | – | ✓ | – | – | – |
+| Invoice view | ✓ | ✓ | – | ✓ | ✓ | ✓ |
+| Invoice generate / issue / void | – | – | – | ✓ | – | – |
+| Payment view | – | – | – | ✓ | ✓ | ✓ |
+| Payment record / allocate | – | – | – | ✓ | – | – |
+| User management | – | – | – | – | – | ✓ |
+| Audit view | – | – | – | – | ✓ | ✓ |
+| Management dashboard | – | – | – | – | ✓ | ✓ |
+
+### 7.3 Implementation
+
+- `requireAuth` middleware validates the session.
+- `requireRole(...roles)` middleware validates the user role.
+- Route-level permission checks enforce the matrix.
+- The UI shows/hides navigation items by role.
+- **Segregation of duties:** a Sales Supervisor cannot approve or reject an order they created.
+
+---
+
+## 8. Route Design
+
+```text
+POST   /auth/login
+POST   /auth/logout
+
+GET    /dashboard
+
+GET    /customers
+GET    /customers/:id
+POST   /customers
+PUT    /customers/:id
+PATCH  /customers/:id/status
+
+GET    /products
+GET    /products/:id
+POST   /products
+PUT    /products/:id
+PATCH  /products/:id/status
+
+GET    /inventory
+GET    /inventory/movements
+POST   /inventory/adjustments
+
+GET    /orders
+GET    /orders/:id
+POST   /orders
+PUT    /orders/:id
+POST   /orders/:id/submit
+POST   /orders/:id/cancel
+
+GET    /approvals
+POST   /approvals/:id/approve
+POST   /approvals/:id/reject
+
+GET    /deliveries
+GET    /deliveries/:id
+POST   /deliveries
+POST   /deliveries/:id/dispatch
+POST   /deliveries/:id/confirm
+POST   /deliveries/:id/cancel
+POST   /deliveries/:id/exception
+
+GET    /invoices
+GET    /invoices/:id
+POST   /invoices
+POST   /invoices/:id/issue
+POST   /invoices/:id/void
+
+GET    /payments
+GET    /payments/:id
+POST   /payments
+POST   /payments/:id/allocations
+
+GET    /categories
+POST   /categories
+PUT    /categories/:id
+
+GET    /warehouses
+POST   /warehouses
+PUT    /warehouses/:id
+PATCH  /warehouses/:id/status
+
+GET    /users
+POST   /users
+PUT    /users/:id
+PATCH  /users/:id/status
+
+GET    /audit
+```
+
+All routes are protected by `requireAuth`; role-restricted routes add `requireRole`.
+
+---
+
+## 9. UI Design
+
+### 9.1 Layout
+
+- **Top bar:** application name, current user, role, logout.
+- **Left sidebar:** role-based navigation.
+- **Main content:** page content with breadcrumb and flash messages.
+
+### 9.2 Pages
+
+| Page | Purpose |
+|---|---|
+| Login | Authentication |
+| Dashboard | KPI cards, charts, recent activity, credit overrides |
+| Customers | List, detail, create/edit form |
+| Products | List, detail, create/edit form |
+| Inventory | Stock balances, movement history, adjustments |
+| Orders | List, detail, create/edit form, submit/cancel |
+| Approvals | Pending queue, review, approve/reject with reason |
+| Deliveries | List, detail, create, dispatch/confirm |
+| Invoices | List, detail, generate, issue, void |
+| Payments | List, detail, record, allocate |
+| Users | List, create/edit, role assignment |
+| Categories | Admin management of product categories |
+| Warehouses | Admin management of warehouses |
+| Audit | Filterable audit log |
+
+### 9.4 Per-Role Dashboard
+
+| Role | Dashboard contents |
+|---|---|
+| Sales Staff | My orders, order status distribution, recent orders |
+| Sales Supervisor | Sales KPIs, pending approval queue, order status distribution |
+| Warehouse Staff | Fulfillment queue, delivery status, stock overview |
+| Finance Staff | Receivables, overdue invoices, recent payments, invoice status |
+| Management | All KPIs, revenue, overdue, credit overrides, recent activity |
+| Admin | Technical overview, user activity |
+
+### 9.3 Design Direction
+
+- Clean enterprise layout, neutral palette, clear typography.
+- Status badges with consistent color semantics.
+- Tables with sorting and filtering where relevant.
+- Forms with inline validation messages.
+- Responsive down to tablet width.
+
+Detailed visual design will use the `design-taste-frontend` / `impeccable` guidance during implementation.
+
+---
+
+## 10. Validation and Error Handling
+
+- **Input validation:** `express-validator` chains at route level.
+- **Business validation:** services throw `ApiError` with a user-friendly message.
+- **Central error middleware:** renders an error page or returns JSON for API-like routes.
+- **Flash messages:** success and error feedback in the UI.
+- **No stack traces** are exposed to users.
+
+---
+
+## 11. Audit Trail
+
+Recorded events:
+
+| Entity | Events |
+|---|---|
+| auth | login, logout |
+| customer | created, updated, status_changed |
+| product | created, updated, status_changed |
+| order | created, updated, submitted, approved, rejected, cancelled |
+| approval | overridden |
+| delivery | created, dispatched, confirmed, cancelled, exception |
+| invoice | generated, issued, voided |
+| payment | recorded, allocated |
+| inventory | adjusted |
+| user | created, updated, status_changed |
+
+Each record contains: `user_id`, `action`, `entity_type`, `entity_id`, `details` (JSON), `created_at`.
+
+---
+
+## 12. Testing Strategy
+
+- **Unit tests:** services (calculations, status transitions, business rules).
+- **Integration tests:** routes with Supertest (auth, RBAC, CRUD, workflows).
+- **Transaction tests:** rollback on failure for approval, dispatch, invoice, payment.
+- **UAT scenarios:** documented in `docs/testing/uat-scenarios.md` and executed with evidence.
+
+Test data is provided by the seed script.
+
+---
+
+## 13. Security
+
+- Passwords hashed with bcrypt.
+- Session-based auth with HTTP-only cookies.
+- CSRF protection via synchronizer token stored in the session.
+- Parameterized queries via better-sqlite3 prepared statements (SQL injection prevention).
+- Role-based access control on every route.
+- Security headers via `helmet`.
+- Audit trail for accountability.
+
+---
+
+## 14. Seed Data
+
+- 6 users (one per role).
+- 8–10 fictional Indonesian customers.
+- 3 product categories, 12–15 products.
+- 1 warehouse with inventory balances.
+- Sample orders, deliveries, invoices, and payments to demonstrate the dashboard.
+
+Fictional company: **PT Maju Bersama** — distributor of building materials and industrial supplies.
+
+---
+
+## 15. Conventions
+
+- **UI language:** English.
+- **Currency:** IDR, formatted as `Rp 1.234.567`.
+- **Dates:** ISO `YYYY-MM-DD` stored; displayed in Indonesian format.
+- **Timezone:** Asia/Jakarta (WIB) for business dates.
+- **Naming:** camelCase in JavaScript, snake_case in the database.
+- **Timestamps:** `YYYY-MM-DD HH:MM:SS` in WIB.
+- **Numbers:** decimal for quantities (supports fractional units), 2 decimals for money.
+
+---
+
+## 16. Out of Scope (MVP)
+
+- Tax calculation, configuration, and reporting.
+- Payment gateway and bank reconciliation.
+- General ledger integration.
+- Procurement and vendor management.
+- Demand forecasting.
+- Multi-currency.
+- Consolidated invoicing across deliveries.
+- Returns and credit notes.
+- Notifications.
+- Export functionality.
+- Customer self-service portal.
+
+---
+
+## 17. Decisions Log (2026-11-12)
+
+| # | Decision | Status |
+|---|---|---|
+| D1 | Tech stack: Node.js + Express + SQLite + EJS | Confirmed |
+| D2 | 6-role model from PRD.md | Confirmed |
+| D3 | Credit limit: warning + override with justification | Confirmed |
+| D4 | Credit exposure includes the current order under approval | Confirmed |
+| D5 | Per-delivery invoicing | Confirmed |
+| D6 | Tax outside MVP (schema extensible) | Confirmed |
+| D7 | Scope: full O2C + dashboard + audit | Confirmed |
+| D8 | Order fulfillment status updates on delivery confirmation | Confirmed |
+| D9 | Order line prices default to list price but can be overridden | Confirmed |
+| D10 | `credit_limit = 0` means no limit (check skipped) | Confirmed |
+| D11 | Delivery exceptions resolve to delivered or cancelled | Confirmed |
+| D12 | Categories and warehouses are admin-managed CRUD | Confirmed |
+| D13 | Per-role dashboard KPI sets (§9.4) | Confirmed |
+| D14 | Invoice void only for invoices without allocations | Confirmed |
+| D15 | Payment reversal out of MVP scope | Confirmed |
+| D16 | Self-approval blocked | Confirmed |
+| D17 | Partial order cancellation supported | Confirmed |

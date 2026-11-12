@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · <%= companyName %></title>
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+</head>
+<body>
+<%- include('../partials/icons') %>
+<div class="auth-page">
+  <section class="auth-visual" aria-hidden="true">
+    <div class="auth-brand">
+      <div class="brand-mark">MB</div>
+      <div>
+        <div class="auth-brand-name">PT Maju Bersama</div>
+        <div class="auth-brand-sub">Distribution &amp; Industrial Supplies</div>
+      </div>
+    </div>
+
+    <div class="auth-hero">
+      <h1>One flow from<br><span>order to cash.</span></h1>
+      <p>
+        A centralized workspace for sales, warehouse, and finance — with controlled
+        approvals, reserved inventory, per-delivery invoicing, and receivable monitoring.
+      </p>
+
+      <div class="auth-steps mt-3">
+        <div class="auth-step">
+          <div class="auth-step-no">1</div>
+          <div>
+            <div class="auth-step-title">Order capture</div>
+            <div class="auth-step-text">Customer orders with negotiated pricing and credit evaluation.</div>
+          </div>
+        </div>
+        <div class="auth-step">
+          <div class="auth-step-no">2</div>
+          <div>
+            <div class="auth-step-title">Approval &amp; reservation</div>
+            <div class="auth-step-text">Supervisor review, credit override, and stock reservation in one transaction.</div>
+          </div>
+        </div>
+        <div class="auth-step">
+          <div class="auth-step-no">3</div>
+          <div>
+            <div class="auth-step-title">Delivery &amp; invoicing</div>
+            <div class="auth-step-text">Partial dispatch, delivery confirmation, and one invoice per delivery.</div>
+          </div>
+        </div>
+        <div class="auth-step">
+          <div class="auth-step-no">4</div>
+          <div>
+            <div class="auth-step-title">Payment &amp; receivables</div>
+            <div class="auth-step-text">Payment allocation, outstanding balances, and overdue monitoring.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-foot">
+      Fictional company · Portfolio prototype · Business process demonstration
+    </div>
+  </section>
+
+  <section class="auth-panel">
+    <div class="auth-card">
+      <div class="eyebrow">Order-to-Cash System</div>
+      <h2>Sign in to your workspace</h2>
+      <p class="auth-card-sub">Use your assigned role account to continue.</p>
+
+      <% if (flash) { %>
+        <div class="alert alert-<%= flash.type || 'info' %>" role="status">
+          <svg class="icon"><use href="#i-alert"></use></svg>
+          <div class="alert-body">
+            <% (flash.messages || [flash.message]).forEach(function (message) { %>
+              <p><%= message %></p>
+            <% }); %>
+          </div>
+        </div>
+      <% } %>
+
+      <form class="login-form" method="post" action="/login" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="field">
+          <label for="username">Username</label>
+          <input class="input" id="username" name="username" type="text" autocomplete="username"
+                 value="<%= old.username || '' %>" placeholder="e.g. sales" required autofocus>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input class="input" id="password" name="password" type="password"
+                 autocomplete="current-password" placeholder="Enter your password" required>
+        </div>
+        <button class="btn btn-primary btn-lg btn-block" type="submit">Sign in</button>
+      </form>
+
+      <div class="demo-box">
+        <div class="demo-title">Demo accounts</div>
+        <div class="demo-grid">
+          <div>Sales Staff · <code>sales / sales123</code></div>
+          <div>Supervisor · <code>supervisor / supervisor123</code></div>
+          <div>Warehouse · <code>warehouse / warehouse123</code></div>
+          <div>Finance · <code>finance / finance123</code></div>
+          <div>Management · <code>management / management123</code></div>
+          <div>Admin · <code>admin / admin123</code></div>
+        </div>
+      </div>
+
+      <p class="auth-note">
+        This application is a portfolio case study. The company, customers, products, and
+        transactions are fictional and intended for demonstration only.
+      </p>
+    </div>
+  </section>
+</div>
+<script src="/js/app.js"></script>
+</body>
+</html>
