@@ -1,7 +1,7 @@
 # Project Plan
 # B2B Order & Payment Management System
 
-**Version:** 1.8  
+**Version:** 1.9  
 **Project Methodology:** Iterative Development  
 **Planning Approach:** Balanced  
 **Project Objective:** Build a functional B2B Order-to-Cash Management System with strong business process documentation.
@@ -352,21 +352,21 @@ Dashboard information reflects actual system transactions and is not based on ha
 **Objective:** Validate system functionality and business process consistency.
 
 Tasks:
-- [ ] Create test plan.
-- [ ] Create UAT scenarios.
-- [ ] Execute authentication tests.
-- [ ] Execute role permission tests.
-- [ ] Execute customer and product tests.
-- [ ] Execute sales order tests.
-- [ ] Execute approval tests.
-- [ ] Execute inventory tests.
-- [ ] Execute partial delivery tests.
-- [ ] Execute invoice tests.
-- [ ] Execute payment allocation tests.
-- [ ] Execute exception scenarios.
-- [ ] Verify audit records.
-- [ ] Fix identified defects.
-- [ ] Document test evidence.
+- [x] Create test plan.
+- [x] Create UAT scenarios.
+- [x] Execute authentication tests.
+- [x] Execute role permission tests.
+- [x] Execute customer and product tests.
+- [x] Execute sales order tests.
+- [x] Execute approval tests.
+- [x] Execute inventory tests.
+- [x] Execute partial delivery tests.
+- [x] Execute invoice tests.
+- [x] Execute payment allocation tests.
+- [x] Execute exception scenarios.
+- [x] Verify audit records.
+- [x] Fix identified defects.
+- [x] Document test evidence.
 
 Expected Deliverables:
 - Test plan.
@@ -424,7 +424,7 @@ A reviewer can understand the business problem, run the application, and follow 
 | M8 - Invoice and Accounts Receivable Management | Completed | Invoice list/detail, generation from delivered shipments, draft issue, void/re-invoice, overdue tracking, receivables stats; 59 tests passing |
 | M9 - Payment Management | Completed | Payment list/detail, recording, multi-invoice allocation, partial payments, unallocated tracking, over-allocation guards; 66 tests passing |
 | M10 — Dashboard and Reporting | Completed | Role-aware dashboard (orders, fulfillment, inventory, receivables, overdue invoices, activity), date/customer filters, audit trail viewer; 73 tests passing |
-| M11 — Testing and Quality Assurance | Not Started | |
+| M11 — Testing and Quality Assurance | Completed | Test plan, 15 UAT scenarios, traceability matrix, execution results, defect log, QA report; 73 tests passing |
 | M12 — Documentation and Portfolio Preparation | Not Started | |
 
 ---
@@ -570,3 +570,4 @@ The project is complete when the MVP workflow is functional, critical acceptance
 | 1.6 | 2026-11-12 | Milestone 8 completed; per-delivery invoicing, draft issuance, void/re-invoice, overdue monitoring, and receivables stats delivered. |
 | 1.7 | 2026-11-12 | Milestone 9 completed; payment recording, multi-invoice allocation, partial payments, unallocated tracking, and over-allocation guards delivered. |
 | 1.8 | 2026-11-12 | Milestone 10 completed; role-aware dashboard with date/customer filters, receivables and overdue monitoring, activity feed, and audit trail viewer delivered. |
+| 1.9 | 2026-11-12 | Milestone 11 completed; test plan, UAT scenarios, traceability matrix, execution results, defect log, and QA report added; 73 tests passing. |

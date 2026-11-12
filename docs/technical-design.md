@@ -1010,6 +1010,8 @@ Utility `src/utils/audit.js` maps action codes to human labels and badge tones, 
 - **Transaction tests:** rollback on failure for approval, dispatch, invoice, payment.
 - **UAT scenarios:** documented in `docs/testing/uat-scenarios.md` and executed with evidence.
 
+At M11 the suite contains 73 integration tests across 8 suites (`npm test`). Supporting documents: `docs/testing/test-plan.md`, `docs/testing/uat-scenarios.md`, `docs/testing/test-execution-results.md`, `docs/testing/defect-log.md`, `docs/testing/qa-report.md`, and `docs/requirements/traceability-matrix.md`.
+
 Test data is provided by the seed script.
 
 ---
