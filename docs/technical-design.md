@@ -113,20 +113,18 @@ b2b-order-payment-management/
 ├── PLAN.md
 ├── DESIGN.md
 ├── README.md
+├── .env.example
 ├── docs/
 │   ├── technical-design.md
-│   ├── business-process/
-│   │   ├── as-is-process.md
-│   │   └── to-be-process.md
 │   ├── requirements/
-│   │   ├── user-stories.md
-│   │   ├── business-rules.md
 │   │   └── traceability-matrix.md
+│   ├── screenshots/
 │   ├── testing/
 │   │   ├── test-plan.md
-│   │   └── uat-scenarios.md
-│   └── decisions/
-│       └── architecture-decisions.md
+│   │   ├── uat-scenarios.md
+│   │   ├── test-execution-results.md
+│   │   ├── defect-log.md
+│   │   └── qa-report.md
 ├── src/
 │   ├── app.js
 │   ├── server.js
@@ -136,6 +134,7 @@ b2b-order-payment-management/
 │   ├── database/
 │   │   ├── migrate.js
 │   │   ├── seed.js
+│   │   ├── reset.js
 │   │   ├── migrations/
 │   │   │   ├── 001_create_users.sql
 │   │   │   ├── 002_create_customers.sql
@@ -150,32 +149,27 @@ b2b-order-payment-management/
 │   │       ├── users.seeder.js
 │   │       ├── customers.seeder.js
 │   │       ├── products.seeder.js
-│   │       └── transactions.seeder.js
-│   ├── models/
-│   │   ├── user.model.js
-│   │   ├── customer.model.js
-│   │   ├── product.model.js
-│   │   ├── warehouse.model.js
-│   │   ├── inventory.model.js
-│   │   ├── sales-order.model.js
-│   │   ├── delivery.model.js
-│   │   ├── invoice.model.js
-│   │   ├── payment.model.js
-│   │   └── audit-log.model.js
+│   │       └── inventory.seeder.js
 │   ├── repositories/
 │   │   ├── user.repository.js
 │   │   ├── customer.repository.js
 │   │   ├── product.repository.js
+│   │   ├── warehouse.repository.js
 │   │   ├── inventory.repository.js
-│   │   ├── sales-order.repository.js
+│   │   ├── order.repository.js
+│   │   ├── approval.repository.js
 │   │   ├── delivery.repository.js
 │   │   ├── invoice.repository.js
 │   │   ├── payment.repository.js
-│   │   └── audit.repository.js
+│   │   ├── dashboard.repository.js
+│   │   ├── audit.repository.js
+│   │   └── number-counter.repository.js
 │   ├── services/
 │   │   ├── auth.service.js
+│   │   ├── user.service.js
 │   │   ├── customer.service.js
 │   │   ├── product.service.js
+│   │   ├── warehouse.service.js
 │   │   ├── inventory.service.js
 │   │   ├── order.service.js
 │   │   ├── approval.service.js
@@ -186,8 +180,11 @@ b2b-order-payment-management/
 │   │   └── audit.service.js
 │   ├── controllers/
 │   │   ├── auth.controller.js
+│   │   ├── user.controller.js
 │   │   ├── customer.controller.js
 │   │   ├── product.controller.js
+│   │   ├── category.controller.js
+│   │   ├── warehouse.controller.js
 │   │   ├── inventory.controller.js
 │   │   ├── order.controller.js
 │   │   ├── approval.controller.js
@@ -195,13 +192,15 @@ b2b-order-payment-management/
 │   │   ├── invoice.controller.js
 │   │   ├── payment.controller.js
 │   │   ├── dashboard.controller.js
-│   │   ├── user.controller.js
 │   │   └── audit.controller.js
 │   ├── routes/
 │   │   ├── index.js
 │   │   ├── auth.routes.js
+│   │   ├── user.routes.js
 │   │   ├── customer.routes.js
 │   │   ├── product.routes.js
+│   │   ├── category.routes.js
+│   │   ├── warehouse.routes.js
 │   │   ├── inventory.routes.js
 │   │   ├── order.routes.js
 │   │   ├── approval.routes.js
@@ -209,19 +208,23 @@ b2b-order-payment-management/
 │   │   ├── invoice.routes.js
 │   │   ├── payment.routes.js
 │   │   ├── dashboard.routes.js
-│   │   ├── user.routes.js
 │   │   └── audit.routes.js
 │   ├── middleware/
 │   │   ├── auth.middleware.js
 │   │   ├── rbac.middleware.js
 │   │   ├── validate.middleware.js
-│   │   ├── error.middleware.js
-│   │   └── csrf.middleware.js
+│   │   ├── csrf.middleware.js
+│   │   ├── flash.middleware.js
+│   │   └── error.middleware.js
 │   ├── validators/
 │   │   ├── auth.validator.js
+│   │   ├── user.validator.js
 │   │   ├── customer.validator.js
 │   │   ├── product.validator.js
+│   │   ├── warehouse.validator.js
+│   │   ├── inventory.validator.js
 │   │   ├── order.validator.js
+│   │   ├── approval.validator.js
 │   │   ├── delivery.validator.js
 │   │   ├── invoice.validator.js
 │   │   └── payment.validator.js
@@ -229,49 +232,61 @@ b2b-order-payment-management/
 │   │   ├── constants.js
 │   │   ├── format.js
 │   │   ├── numbering.js
+│   │   ├── audit.js
+│   │   ├── time.js
 │   │   ├── ApiError.js
 │   │   └── logger.js
 │   ├── views/
-│   │   ├── layouts/
-│   │   │   └── main.ejs
 │   │   ├── partials/
-│   │   │   ├── header.ejs
+│   │   │   ├── head.ejs
+│   │   │   ├── topbar.ejs
 │   │   │   ├── sidebar.ejs
-│   │   │   ├── footer.ejs
-│   │   │   ├── status-badge.ejs
-│   │   │   └── flash.ejs
+│   │   │   ├── flash.ejs
+│   │   │   ├── icons.ejs
+│   │   │   └── foot.ejs
 │   │   ├── auth/
 │   │   │   └── login.ejs
 │   │   ├── dashboard/
 │   │   │   └── index.ejs
-│   │   ├── customers/
-│   │   ├── products/
-│   │   ├── inventory/
 │   │   ├── orders/
 │   │   ├── approvals/
 │   │   ├── deliveries/
 │   │   ├── invoices/
 │   │   ├── payments/
+│   │   ├── customers/
+│   │   ├── products/
+│   │   ├── categories/
+│   │   ├── warehouses/
+│   │   ├── inventory/
 │   │   ├── users/
-│   │   └── audit/
+│   │   ├── audit/
+│   │   └── errors/
 │   └── public/
 │       ├── css/
 │       │   ├── reset.css
 │       │   ├── tokens.css
 │       │   ├── components.css
 │       │   └── layout.css
-│       ├── js/
-│       │   ├── app.js
-│       │   └── order-form.js
-│       └── images/
+│       └── js/
+│           ├── app.js
+│           └── orders.js
+├── scripts/
+│   └── seed-demo.js
 ├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── fixtures/
+│   ├── helpers.js
+│   ├── setup.env.js
+│   └── integration/
+│       ├── auth.test.js
+│       ├── master-data.test.js
+│       ├── orders.test.js
+│       ├── approvals.test.js
+│       ├── deliveries.test.js
+│       ├── invoices.test.js
+│       ├── payments.test.js
+│       └── dashboard.test.js
 ├── database/
 │   └── b2b.db
 ├── .env
-├── .env.example
 ├── .gitignore
 ├── package.json
 └── jest.config.js
@@ -1012,7 +1027,7 @@ Utility `src/utils/audit.js` maps action codes to human labels and badge tones, 
 
 At M11 the suite contains 73 integration tests across 8 suites (`npm test`). Supporting documents: `docs/testing/test-plan.md`, `docs/testing/uat-scenarios.md`, `docs/testing/test-execution-results.md`, `docs/testing/defect-log.md`, `docs/testing/qa-report.md`, and `docs/requirements/traceability-matrix.md`.
 
-Test data is provided by the seed script.
+Integration tests create their own transactions against the seeded master data. For manual review and screenshots, `npm run db:demo` builds a realistic Order-to-Cash history through the application services, so the demo data obeys the same business rules as normal usage.
 
 ---
 
@@ -1030,13 +1045,21 @@ Test data is provided by the seed script.
 
 ## 14. Seed Data
 
-- 6 users (one per role).
-- 8–10 fictional Indonesian customers.
-- 3 product categories, 12–15 products.
-- 1 warehouse with inventory balances.
-- Sample orders, deliveries, invoices, and payments to demonstrate the dashboard.
+Master data (`npm run db:seed` or `npm run db:reset`):
 
-Fictional company: **PT Maju Bersama** — distributor of building materials and industrial supplies.
+- 6 users (one per role: `sales`, `supervisor`, `warehouse`, `finance`, `management`, `admin`).
+- 8 fictional Indonesian customers with different payment terms and credit limits.
+- 3 product categories and 15 products.
+- 1 warehouse (`WH-JKT`) with opening inventory balances and receipt movements.
+
+Demo transactions (`npm run db:demo`):
+
+- Rebuilds the database, then creates 9 sales orders through the application services so reservations, delivery quantities, invoices, payment balances, statuses, and audit records stay consistent.
+- 4 deliveries covering `delivered` and `delivery_exception`; 3 invoices covering `partially_paid`, `paid`, and `issued`; 3 payments covering `fully_allocated` and unallocated balances.
+- Includes a submitted order for the approval queue, a credit-limit override with justification, a draft order, and a rejected order.
+- Because records are created through services, demo data exercises the same invariants as real usage (stock reservation, invoice uniqueness, allocation limits, audit trail).
+
+Fictional company: **PT Maju Bersama** — distributor of building materials and industrial supplies. All records are fictional and intended for demonstration.
 
 ---
 

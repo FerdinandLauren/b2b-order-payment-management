@@ -1,6 +1,6 @@
 # DESIGN — ERP Functional Implementation Case Study: Order-to-Cash
 
-**Version:** 1.0  
+**Version:** 1.2  
 **Design Status:** Conceptual / Vendor-Neutral  
 **Business Scenario:** Fictional Wholesale Distribution Company
 

@@ -1,7 +1,7 @@
 # Product Requirements Document (PRD)
 # B2B Order & Payment Management System
 
-**Version:** 1.0  
+**Version:** 1.2  
 **Project Type:** Business Information System  
 **Domain:** B2B Distribution, Order Management, Inventory, Fulfillment, Invoicing, and Accounts Receivable  
 **Product Status:** Initial Specification

@@ -1,7 +1,7 @@
 # Project Plan
 # B2B Order & Payment Management System
 
-**Version:** 1.9  
+**Version:** 2.0  
 **Project Methodology:** Iterative Development  
 **Planning Approach:** Balanced  
 **Project Objective:** Build a functional B2B Order-to-Cash Management System with strong business process documentation.
@@ -384,18 +384,19 @@ All critical business workflows pass their acceptance criteria.
 **Objective:** Prepare the project for public demonstration.
 
 Tasks:
-- [ ] Complete README.md.
-- [ ] Document installation instructions.
-- [ ] Document environment configuration.
-- [ ] Document system architecture.
-- [ ] Document database design.
-- [ ] Prepare demo accounts.
-- [ ] Prepare fictional demo data.
-- [ ] Capture application screenshots.
-- [ ] Prepare demo workflow.
-- [ ] Document limitations.
-- [ ] Document future enhancements.
-- [ ] Publish repository.
+- [x] Complete README.md.
+- [x] Document installation instructions.
+- [x] Document environment configuration.
+- [x] Document system architecture.
+- [x] Document database design.
+- [x] Prepare demo accounts.
+- [x] Prepare fictional demo data.
+- [x] Capture application screenshots.
+- [x] Prepare demo workflow.
+- [x] Document limitations.
+- [x] Document future enhancements.
+- [x] Add a repeatable demo-data generator (`npm run db:demo`).
+- [x] Publish repository.
 
 Expected Deliverables:
 - Complete GitHub repository.
@@ -425,7 +426,7 @@ A reviewer can understand the business problem, run the application, and follow 
 | M9 - Payment Management | Completed | Payment list/detail, recording, multi-invoice allocation, partial payments, unallocated tracking, over-allocation guards; 66 tests passing |
 | M10 — Dashboard and Reporting | Completed | Role-aware dashboard (orders, fulfillment, inventory, receivables, overdue invoices, activity), date/customer filters, audit trail viewer; 73 tests passing |
 | M11 — Testing and Quality Assurance | Completed | Test plan, 15 UAT scenarios, traceability matrix, execution results, defect log, QA report; 73 tests passing |
-| M12 — Documentation and Portfolio Preparation | Not Started | |
+| M12 — Documentation and Portfolio Preparation | Completed | README, setup/env/demo guides, demo accounts, demo data generator, screenshots, walkthrough, limitations, and documentation index; 73 tests passing |
 
 ---
 
@@ -571,3 +572,4 @@ The project is complete when the MVP workflow is functional, critical acceptance
 | 1.7 | 2026-11-12 | Milestone 9 completed; payment recording, multi-invoice allocation, partial payments, unallocated tracking, and over-allocation guards delivered. |
 | 1.8 | 2026-11-12 | Milestone 10 completed; role-aware dashboard with date/customer filters, receivables and overdue monitoring, activity feed, and audit trail viewer delivered. |
 | 1.9 | 2026-11-12 | Milestone 11 completed; test plan, UAT scenarios, traceability matrix, execution results, defect log, and QA report added; 73 tests passing. |
+| 2.0 | 2026-11-12 | Milestone 12 completed; README, setup and demo instructions, demo accounts, repeatable demo-data generator, screenshots, guided walkthrough, limitations, and documentation index added. |
